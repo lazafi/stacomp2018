@@ -1,0 +1,118 @@
+---
+title: "WCBC Tasks"
+author: "Fabian Schroeder"
+date: "May 29, 2018"
+output: html_document
+---
+
+### Historic WC Data
+
+* **Task 1.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. Describe the data in a few lines.
+
+* **Task 2.** Write a function that generates the result of the game (W, D, L) from the vectors. How would you incorporate the information in the variable `Win.conditions`?
+
+* **Task 3.** Explore the data set using summary statistics and illustrations. 
+
+  - How often has every nation participated?
+  - Create a table with the number of wins/draws/losses for ever nation.
+  - How many goals were scored on average by ever nation?
+  - etc.
+
+* **Task 4.** Do you think this data set can be used to build a predictor function?
+
+
+### FIFA Ranking Data
+
+* **Task 5.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. 
+
+* **Task 6.** What is the class of `fifa.ranking$rank_date`? Is this a problem? Can you change it to class data using `as.Data`? What difference does this make for e.g. plotting?
+
+* **Task 7.** Plot the FIFA ranks for a selection of favorites
+```{r }
+favorites <- c("Germany", "Brazil", "Belgium", "France", "Argentinia")
+```
+If you use `ggplot()` don't forget to `scale_y_reverse()``
+
+
+### Transfermarkt.de Data
+
+* **Task 8.** Have a look at the following web site [](https://www.transfermarkt.com/weltmeisterschaft-2018/startseite/pokalwettbewerb/WM18). Where can you find detailed information from the past world cups?
+
+* **Task 9.** (voluntary) Browse the vignette of the following package:
+
+```{r }
+library(rvest)
+```
+
+* **Task 10.** (voluntary) How can you scrape the relevant information of the following websites (in the order of the vector `participants`)?
+
+```{r }
+links.transfermarkt <- c(
+  "https://www.transfermarkt.com/argentinien/startseite/verein/3437",
+  "https://www.transfermarkt.com/australien/startseite/verein/3433",
+  "https://www.transfermarkt.com/belgien/startseite/verein/3382",
+  "https://www.transfermarkt.com/brasilien/startseite/verein/3439",
+  "https://www.transfermarkt.com/kolumbien/startseite/verein/3816",
+  "https://www.transfermarkt.com/costa-rica/startseite/verein/8497",
+  "https://www.transfermarkt.com/kroatien/startseite/verein/3556",
+  "https://www.transfermarkt.com/danemark/startseite/verein/3436",
+  "https://www.transfermarkt.com/agypten/startseite/verein/3672",
+  "https://www.transfermarkt.com/england/startseite/verein/3299",
+  "https://www.transfermarkt.com/frankreich/startseite/verein/3377",
+  "https://www.transfermarkt.com/deutschland/startseite/verein/3262",
+  "https://www.transfermarkt.com/island/startseite/verein/3574",
+  "https://www.transfermarkt.com/iran/startseite/verein/3582",
+  "https://www.transfermarkt.com/japan/startseite/verein/3435",
+  "https://www.transfermarkt.com/sudkorea/startseite/verein/3589",
+  "https://www.transfermarkt.com/mexiko/startseite/verein/6303",
+  "https://www.transfermarkt.com/marokko/startseite/verein/3575",
+  "https://www.transfermarkt.com/nigeria/startseite/verein/3444",
+  "https://www.transfermarkt.com/panama/startseite/verein/3577",
+  "https://www.transfermarkt.com/peru/startseite/verein/3584",
+  "https://www.transfermarkt.com/polen/startseite/verein/3442",
+  "https://www.transfermarkt.com/portugal/startseite/verein/3300",
+  "https://www.transfermarkt.com/russland/startseite/verein/3448",
+  "https://www.transfermarkt.com/saudi-arabien/startseite/verein/3807",
+  "https://www.transfermarkt.com/senegal/startseite/verein/3499",
+  "https://www.transfermarkt.com/serbien/startseite/verein/3438",
+  "https://www.transfermarkt.com/spanien/startseite/verein/3375",
+  "https://www.transfermarkt.com/schweden/startseite/verein/3557",
+  "https://www.transfermarkt.com/schweiz/startseite/verein/3384",
+  "https://www.transfermarkt.com/tunesien/startseite/verein/3670",
+  "https://www.transfermarkt.com/uruguay/startseite/verein/3449"
+)
+```
+
+What kind of css selectors are there? [](https://www.w3schools.com/cssref/css_selectors.asp) How can you use them to extract the information?
+
+hint: use `read_html()`, `html_nodes()` with the css selectors ".item" or "td", `html_children()`, etc.
+
+
+* **Task 11**
+
+
+### Socio-economic Data
+
+* **Task 12.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. Describe the data in a few lines. 
+
+* **Task 13.** Link the FIFA Ranks with this data by means of the country names and generate a scatterplot of the rank against the population, gdp etc. Which of the socio economic variables contains some information about the teams performance?
+
+
+### Evaluation
+
+* **Task 14.** Implement the evaluation metric. This is a function with two arguments: the prediction matrix $R$ and a data structure with the true results $R_true$. Note, that this data structure should not be a matrix since two teams may compete twice against each other during the course of a world cup tournament. What data structure would you suggest?
+
+* **Task 15.** Generate a matrix of random predictions to test this function. Don't forget, that this matrix is symmetric and that the diagonal should only contain NAs. 
+
+* **Task 16.** Generate (hypothetic) true results and test the function of Task 14.
+
+* **Task 17.** A completely naive predictor, which randomly predicts the outcome with equal probabilites, should serve as a benchmark. What is the expected rate of correct predictions?
+  
+  
+
+
+
+
+
+
+

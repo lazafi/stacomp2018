@@ -1,0 +1,101 @@
+---
+header-includes:
+  - fancyhead[L]{includegraphics[width=5cm]{/home/Fabian2/Desktop/WCBracketChallenge/wc.png}}
+output: 
+  html_document
+---
+
+```{r include=FALSE}
+library(tidyverse)
+```
+
+<img src="/home/Fabian2/Desktop/WCBracketChallenge/wc.png" align="right">
+
+# FIFA World Cup Bracket Challenge 
+
+Football is considered the worlds greatest game. According to FIFA, the final of the 2014 world cup was watched by one billion people world wide. Even if you are not a football enthusiast, I hope you can apreciate the difficulty of predicting the outcome of a football game. The official bracket challenge can be found at [https://bracketchallenge.fifa.com/](https://bracketchallenge.fifa.com/). In your final assignment you will try to build predictors for all 63 games of the 2018 FIFA world cup. 
+
+Your predictions will of course be based on data and (statistical) models and will be trained on historical results of all the prior world cups. But what is best source of information to predict the outcome of a football game? The historical results of the competing teams? The size of the country? The market value of its players? Is there an advantage for the home team? Let us find out!
+
+
+## Rules of the Challenge
+
+**§1** Every team must submit one .Rmd file that includes
+
+ - a predicting function. Let us denote two countries by $A$ and $B$ and the outcome of a game by $W$, $D$, and $L$ stand for win, draw, and loss of team $A$. Then a predictor is a function mapping a pair of countries to the result of the game,
+ 
+ $$ \delta(A, B) \in \{ W, D, L \},$$
+
+ - the results of the predictor for every possible pair of teams. If we denote the vector of participating countries by $team_i, i=1, \ldots, 32$, the results matrix $R$ is a $32 \times 32$ matrix with elements $r_{i,j} = \delta(team_i, team_j)$,
+ 
+ - an in depth explanation of the predictor, including summaries and graphical illustrations of the underlying data sets, and
+ 
+ - the performance of your predictor for past world cup results.
+ 
+
+**§2** The prediction will be evaluated according to the following "metric". If we denote the true results matrix by
+
+Let $I$ denote the set of games, thus, $I = \{ (Russia, Saudi Arabia), (Egypt, Uruguay), (Morocco, Iran), (Spain, Portugal), \ldots \}$ and let $r^{true}_{i,j}$ denote the true outcome of the game, then the prediction performance is simply the percentage of correctly predicted games
+
+$$ \frac{1}{63} \sum_{(i,j) \in I} \mathbb{1}(r^{true}_{i,j} = r_{i,j}).$$
+Note, that it is possible that two teams play against each other twice in one world cup. However, only one prediction is possible. 
+
+
+**§2** The choice of the predictor is completely up to you, however, you must be able to explain the choice of classifier by applying it to historical data.
+
+The predictors could come in many shapes. You can base the predictions on determinstic rule such as: the team that has won more world cup games so far, or that team that is ranked higher in the FIFA ranking. You can also use logistic regression models or discriminant analysis. All methods must be evaluated on historical data.
+
+Bear in mind, that the result of such an experiment is itself a random variable and thus, the "best predictor" must not necessarily win.
+
+
+**§4** Any information can be used for prediction. However, I have provided a number of interesting data sets, which I will explain in the following sections. 
+
+
+## General Information
+
+#### Participating teams
+
+The participating nations are
+```{r }
+participants <- c("Argentinia", "Australia", "Belgium", "Brazil", "Colombia", "Costa Rica", "Croatia", "Denmark", "Egypt", "England", "France", "Germany", "Iceland", "Iran", "Japan", "Korea Republic", "Mexico", "Morocco", "Nigeria", "Panama", "Peru", "Poland", "Portugal", "Russia", "Saudi Arabia", "Senegal", "Serbia", "Spain", "Sweden", "Switzerland", "Tunisia", "Uruguay")
+```
+
+
+## Results of past world cups
+
+`WorldCupMatches.csv` consists of the results of all world cup games played sofar  
+
+```{r cache=TRUE}
+WC.history <- read.csv("/home/Fabian2/Desktop/WCBracketChallenge/WorldCupMatches.csv")
+head(WC.history)
+str(WC.history)
+```
+This information should be used to evaluate predictors.
+
+
+## Sources of Data for prediction
+
+### FIFA ranking
+
+```{r warning=FALSE}
+fifa.ranking <- read.csv("/home/Fabian2/Desktop/WCBracketChallenge/fifa_ranking.csv")
+str(fifa.ranking)
+head(fifa.ranking)
+```
+
+### transfermarkt.de
+
+There is a bunch of information about the players of every participating team on transfermarkt.de. However, this information needs to be scrapped from the following website [](https://www.transfermarkt.com/weltmeisterschaft-2018/startseite/pokalwettbewerb/WM18). For this purpose, we will use the R package `rvest`.
+
+
+### Socioeconomic data
+
+```{r }
+country.data <- read.csv("/home/Fabian2/Desktop/WCBracketChallenge/countries of the world.csv")
+str(country.data)
+```
+
+
+
+
+
