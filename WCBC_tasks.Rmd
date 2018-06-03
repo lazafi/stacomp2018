@@ -25,7 +25,7 @@ output: html_document
 
 * **Task 5.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. 
 
-* **Task 6.** What is the class of `fifa.ranking$rank_date`? Is this a problem? Can you change it to class data using `as.Data`? What difference does this make for e.g. plotting?
+* **Task 6.** What is the class of `fifa.ranking$rank_date`? Is this a problem? Can you change it to class `date` using `as.Date`? What difference does this make for e.g. plotting?
 
 * **Task 7.** Plot the FIFA ranks for a selection of favorites
 ```{r }
@@ -36,7 +36,7 @@ If you use `ggplot()` don't forget to `scale_y_reverse()``
 
 ### Transfermarkt.de Data
 
-* **Task 8.** Have a look at the following web site [](https://www.transfermarkt.com/weltmeisterschaft-2018/startseite/pokalwettbewerb/WM18). Where can you find detailed information from the past world cups?
+* **Task 8.** Have a look at the following web site [https://www.transfermarkt.com/weltmeisterschaft-2018/startseite/pokalwettbewerb/WM18](https://www.transfermarkt.com/weltmeisterschaft-2018/startseite/pokalwettbewerb/WM18). Where can you find detailed information from the past world cups?
 
 * **Task 9.** (voluntary) Browse the vignette of the following package:
 
@@ -83,7 +83,7 @@ links.transfermarkt <- c(
 )
 ```
 
-What kind of css selectors are there? [](https://www.w3schools.com/cssref/css_selectors.asp) How can you use them to extract the information?
+What kind of css selectors are there? [https://www.w3schools.com/cssref/css_selectors.asp](https://www.w3schools.com/cssref/css_selectors.asp) How can you use them to extract the information?
 
 hint: use `read_html()`, `html_nodes()` with the css selectors ".item" or "td", `html_children()`, etc.
 
@@ -100,7 +100,7 @@ hint: use `read_html()`, `html_nodes()` with the css selectors ".item" or "td", 
 
 ### Evaluation
 
-* **Task 14.** Implement the evaluation metric. This is a function with two arguments: the prediction matrix $R$ and a data structure with the true results $R_true$. Note, that this data structure should not be a matrix since two teams may compete twice against each other during the course of a world cup tournament. What data structure would you suggest?
+* **Task 14.** Implement the evaluation metric. This is a function with two arguments: the prediction matrix $R$ and a data structure with the true results $R_{true}$. Note, that this data structure should not be a matrix since two teams may compete twice against each other during the course of a world cup tournament. What data structure would you suggest?
 
 * **Task 15.** Generate a matrix of random predictions to test this function. Don't forget, that this matrix is symmetric and that the diagonal should only contain NAs. 
 

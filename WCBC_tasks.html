@@ -143,7 +143,7 @@ $(document).ready(function () {
 <h3>FIFA Ranking Data</h3>
 <ul>
 <li><p><strong>Task 5.</strong> Get familiar with the data using <code>str()</code>, <code>head()</code>, <code>table()</code>, <code>summary()</code>, etc.</p></li>
-<li><p><strong>Task 6.</strong> What is the class of <code>fifa.ranking$rank_date</code>? Is this a problem? Can you change it to class data using <code>as.Data</code>? What difference does this make for e.g. plotting?</p></li>
+<li><p><strong>Task 6.</strong> What is the class of <code>fifa.ranking$rank_date</code>? Is this a problem? Can you change it to class <code>date</code> using <code>as.Date</code>? What difference does this make for e.g. plotting?</p></li>
 <li><p><strong>Task 7.</strong> Plot the FIFA ranks for a selection of favorites</p></li>
 </ul>
 <pre class="r"><code>favorites &lt;- c(&quot;Germany&quot;, &quot;Brazil&quot;, &quot;Belgium&quot;, &quot;France&quot;, &quot;Argentinia&quot;)</code></pre>
@@ -152,7 +152,7 @@ $(document).ready(function () {
 <div id="transfermarkt.de-data" class="section level3">
 <h3>Transfermarkt.de Data</h3>
 <ul>
-<li><p><strong>Task 8.</strong> Have a look at the following web site <a href="https://www.transfermarkt.com/weltmeisterschaft-2018/startseite/pokalwettbewerb/WM18"></a>. Where can you find detailed information from the past world cups?</p></li>
+<li><p><strong>Task 8.</strong> Have a look at the following web site <a href="https://www.transfermarkt.com/weltmeisterschaft-2018/startseite/pokalwettbewerb/WM18" class="uri">https://www.transfermarkt.com/weltmeisterschaft-2018/startseite/pokalwettbewerb/WM18</a>. Where can you find detailed information from the past world cups?</p></li>
 <li><p><strong>Task 9.</strong> (voluntary) Browse the vignette of the following package:</p></li>
 </ul>
 <pre class="r"><code>library(rvest)</code></pre>
@@ -194,7 +194,7 @@ $(document).ready(function () {
   &quot;https://www.transfermarkt.com/tunesien/startseite/verein/3670&quot;,
   &quot;https://www.transfermarkt.com/uruguay/startseite/verein/3449&quot;
 )</code></pre>
-<p>What kind of css selectors are there? <a href="https://www.w3schools.com/cssref/css_selectors.asp"></a> How can you use them to extract the information?</p>
+<p>What kind of css selectors are there? <a href="https://www.w3schools.com/cssref/css_selectors.asp" class="uri">https://www.w3schools.com/cssref/css_selectors.asp</a> How can you use them to extract the information?</p>
 <p>hint: use <code>read_html()</code>, <code>html_nodes()</code> with the css selectors “.item” or “td”, <code>html_children()</code>, etc.</p>
 <ul>
 <li><strong>Task 11</strong></li>
@@ -210,7 +210,7 @@ $(document).ready(function () {
 <div id="evaluation" class="section level3">
 <h3>Evaluation</h3>
 <ul>
-<li><p><strong>Task 14.</strong> Implement the evaluation metric. This is a function with two arguments: the prediction matrix <span class="math inline">\(R\)</span> and a data structure with the true results <span class="math inline">\(R_true\)</span>. Note, that this data structure should not be a matrix since two teams may compete twice against each other during the course of a world cup tournament. What data structure would you suggest?</p></li>
+<li><p><strong>Task 14.</strong> Implement the evaluation metric. This is a function with two arguments: the prediction matrix <span class="math inline">\(R\)</span> and a data structure with the true results <span class="math inline">\(R_{true}\)</span>. Note, that this data structure should not be a matrix since two teams may compete twice against each other during the course of a world cup tournament. What data structure would you suggest?</p></li>
 <li><p><strong>Task 15.</strong> Generate a matrix of random predictions to test this function. Don’t forget, that this matrix is symmetric and that the diagonal should only contain NAs.</p></li>
 <li><p><strong>Task 16.</strong> Generate (hypothetic) true results and test the function of Task 14.</p></li>
 <li><p><strong>Task 17.</strong> A completely naive predictor, which randomly predicts the outcome with equal probabilites, should serve as a benchmark. What is the expected rate of correct predictions?</p></li>
