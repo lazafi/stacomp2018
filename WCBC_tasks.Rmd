@@ -88,25 +88,22 @@ What kind of css selectors are there? [https://www.w3schools.com/cssref/css_sele
 hint: use `read_html()`, `html_nodes()` with the css selectors ".item" or "td", `html_children()`, etc.
 
 
-* **Task 11**
-
-
 ### Socio-economic Data
 
-* **Task 12.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. Describe the data in a few lines. 
+* **Task 11.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. Describe the data in a few lines. 
 
-* **Task 13.** Link the FIFA Ranks with this data by means of the country names and generate a scatterplot of the rank against the population, gdp etc. Which of the socio economic variables contains some information about the teams performance?
+* **Task 12.** Link the FIFA Ranks with this data by means of the country names and generate a scatterplot of the rank against the population, gdp etc. Which of the socio economic variables contains some information about the teams performance?
 
 
 ### Evaluation
 
-* **Task 14.** Implement the evaluation metric. This is a function with two arguments: the prediction matrix $R$ and a data structure with the true results $R_{true}$. Note, that this data structure should not be a matrix since two teams may compete twice against each other during the course of a world cup tournament. What data structure would you suggest?
+* **Task 13.** Implement the evaluation metric. This is a function with two arguments: the prediction matrix $R$ and a data structure with the true results $R_{true}$. Note, that this data structure should not be a matrix since two teams may compete twice against each other during the course of a world cup tournament. What data structure would you suggest?
 
-* **Task 15.** Generate a matrix of random predictions to test this function. Don't forget, that this matrix is symmetric and that the diagonal should only contain NAs. 
+* **Task 14.** Generate a matrix of random predictions to test this function. Don't forget, that this matrix is symmetric and that the diagonal should only contain NAs. 
 
-* **Task 16.** Generate (hypothetic) true results and test the function of Task 14.
+* **Task 15.** Generate (hypothetic) true results and test the function of Task 14.
 
-* **Task 17.** A completely naive predictor, which randomly predicts the outcome with equal probabilites, should serve as a benchmark. What is the expected rate of correct predictions?
+* **Task 16.** A completely naive predictor, which randomly predicts the outcome with equal probabilites, should serve as a benchmark. What is the expected rate of correct predictions?
   
   
 
