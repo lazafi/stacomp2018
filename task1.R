@@ -43,7 +43,7 @@ str(cups)
 summary(cups)
 #table(cups)
 
-countries <- read.csv("data/countries of the world.csv", dec = ",")
+countries <- read.csv("/home/lazafi/labor/stc-2018/data/countries of the world.csv", dec = ",")
 # countries <- read.csv("data/countries of the world.csv", dec = ",", colClasses = c(
 #   #Country                           : 
 #     "Factor",
