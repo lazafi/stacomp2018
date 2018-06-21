@@ -1,0 +1,11 @@
+TODO:
+
+attila:
+1. Fifi Ranking
+2. Socio-Economic
+3. Predictor
+
+mathias:
+1. Historic WC Data
+2. Transfermarkt
+3. evaluation
