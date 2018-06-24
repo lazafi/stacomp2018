@@ -1,7 +1,7 @@
 TODO:
 
 attila:
-1. Fifi Ranking
+1. Fifa Ranking
 2. Socio-Economic
 3. Predictor
 
