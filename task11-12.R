@@ -1,87 +1,40 @@
 library(ggplot2)
 library(gridExtra)
+library(GGally)
 
-countries <- read.csv("data/countries of the world.csv", dec = ",", strip.white=TRUE)
-# countries <- read.csv("data/countries of the world.csv", dec = ",", colClasses = c(
-#   #Country                           : 
-#     "Factor",
-#   #Region
-#   "Factor",
-#   #Population
-#   "int",
-#   #Area..sq..mi..
-#   "int",
-#   #Pop..Density..per.sq..mi..
-#   "numeric",
-#   #Coastline..coast.area.ratio.
-#   "numeric",
-#   #Net.migration
-#   "numeric",
-#   #Infant.mortality..per.1000.births.
-#   "numeric",
-#   #GDP....per.capita.           
-#   "int",
-#   #Literacy....                      
-#   "numeric",
-#   #Phones..per.1000.                 
-#   "numeric",
-#   #Arable....                        
-#   "numeric",
-#   #Crops....                         
-#   "numeric",
-#   #Other....                         
-#   "numeric",
-#   #Climate                           
-#   "Factor",
-#   #Birthrate                         
-#   "numeric",
-#   #Deathrate                         
-#   "numeric",
-#   #Agriculture                       
-#   "numeric",
-#   #Industry                          
-#   "numeric",
-#   #Service                           
-#   "numeric"
-# )) 
-head(countries)
-str(countries)
-#countries$Country
-summary(countries)
-#library(aplpack) 
-#faces(countries[3:20])
-countries <- countries %>%
+countries <- read.csv("data/countries of the world.csv", dec = ",", strip.white=TRUE) %>%
   arrange(Region)  %>%
   mutate(
-    key = gsub("&", "and", trimws(Country))
+    key = gsub("&", "and", trimws(Country)),
   )
 
-countries.reg <- countries[order(countries$Region),]
-stars(countries.reg[3:20], labels=countries.reg$Country, len=0.7, cex=0.7,  key.loc=c(15,1.5), flip.labels=FALSE,  draw.segments = TRUE)
-library(MASS)
-parcoord(countries[3:20], col=countries$Climate)
+head(countries)
+str(countries)
+summary(countries)
 
-#load ranking data
-ranking <- read.csv("data/fifa_ranking.csv") 
-#convert to date
-ranking <- ranking %>%
-  mutate(
-    rank_date = as.Date(rank_date)
-#    country_full = as.character(country_full)
-  )
-#ranking$rank_date <- as.Date(ranking$rank_date)
+#library(aplpack) 
+#faces(countries[3:20])
+
+# stars(countries.reg[3:20], labels=countries.reg$Country, len=0.7, cex=0.7,  key.loc=c(15,1.5), flip.labels=FALSE,  draw.segments = TRUE)
+# library(MASS)
+# parcoord(countries[3:20], col=countries$Climate)
+
+
 #calculate median rank
 # TODO find better metrics of rank
-med_rank_by_country <- ranking %>%
+med_rank_by_country <- read.csv("data/fifa_ranking.csv")  %>%
   group_by(country_full) %>%
   summarise(
-    med_rank = median(rank)
+    med_rank = median(rank),
+    mean_rank = mean(rank)
   ) %>%
   arrange(med_rank)  %>%
-  transmute(country_full =country_full,
+  transmute(
+    country_full =country_full,
             med_rank = med_rank,
+            mean_rank = mean_rank,
             key =  gsub("&", "and", trimws(as.character(country_full)))
-            )
+  )
 
 str(med_rank_by_country)
 str(countries)
@@ -98,6 +51,9 @@ for (col in names(country_rank)) {
   plots <- c(plots, p)
   #print(p)
 }
+
+ggpairs(country_rank[,sapply(country_rank, is.numeric)])
+
 #grid.arrange(grobs = list(plots))
 #arrangeGrob(plots)
 #TODO: display on one page

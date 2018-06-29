@@ -1,19 +1,68 @@
 #task 2
 library(magrittr)
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 
-ranking <- read.csv("data/fifa_ranking.csv") 
+ranking <- read.csv("data/fifa_ranking.csv")  %>%
+  mutate (
+    rank_date = as.Date(rank_date)
+  )
 #convert to date
-ranking$rank_date <- as.Date(ranking$rank_date)
+#ranking$rank_date <- as.Date(ranking$rank_date)
 head(ranking)
 str(ranking)
 summary(ranking)
 #table(ranking)
 
-plot(ranking$rank)
-ranking$rank
-med_rank_by_country <- aggregate(ranking$rank, by=list(ranking$country_abrv), FUN=median)
+ranking_de <- ranking  %>%
+  filter(
+    country_abrv == "GER"
+  )  %>%
+  select(
+    rank_date, 
+#    cur_year_avg,
+#    cur_year_avg_weighted
+ matches("*avg*"),
+ - country_full,
+ - country_abrv,
+ - confederation
+         ) %>%
+  gather(key = "variable", value = "value", -rank_date)
+
+ggplot(ranking_de, aes(x = rank_date, y = value)) + 
+  geom_line(aes(color = variable)) +
+#  scale_color_manual(values = c("#00AFBB", "#E7B800")) +
+  theme_minimal()
+  
+
+
+
+# ranking_de_num <- ranking_de[,sapply(ranking_de, is.numeric)]
+# plot <- ggplot(ranking_de, aes(rank_date))
+# #plot <- baseplot + geom_line(aes_string(y=col)) 
+# i<-0
+# for (col in names(ranking_de_num)) {
+#   i<-i+1
+#   print(i)
+#   print(col)
+#   plot <- plot + geom_line(aes_string(y=col, col=i))
+# }
+# print(plot)
+# 
+# col="three_year_ago_weighted"
+# col2 = "cur_year_avg_weighted"
+# plots <- ggplot(ranking_de, aes(rank_date)) + geom_line(aes_string(y=col)) + geom_line(aes_string(y=col2))
+# print(plots)
+# 
+# baseplot <- ggplot(ranking_de, aes(rank_date))
+# plot <- baseplot + geom_line(aes_string(y=col)) 
+# plot <- plot + geom_line(aes_string(y=col2))
+# 
+# print(plot)
+# #plot(ranking$rank)
+# #ranking$rank
+# #med_rank_by_country <- aggregate(ranking$rank, by=list(ranking$country_abrv), FUN=median)
 
 med_rank_by_country <- ranking %>%
 group_by(country_abrv) %>%
