@@ -7,6 +7,12 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+###Info Sources
+
+https://en.wikipedia.org/wiki/Statistical_association_football_predictions
+
+
+
 ### Historic WC Data
 
 * **Task 1.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. Describe the data in a few lines.
