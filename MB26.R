@@ -13,11 +13,11 @@ countrofworld = read_csv("countries of the world.csv")
 fifa_rank = read_csv("fifa_ranking.csv")
 
 
-WorldCup = read_csv("WorldCups.csv")
-WorldCupPlay = read_csv("WorldCupPlayers.csv")
+WorldCup = read_csv("data/WorldCups.csv")
+WorldCupPlay = read_csv("data/WorldCupPlayers.csv")
 
 # Historical DAta 
-WorldCupMatch = read_csv("WorldCupMatches.csv")
+WorldCupMatch = read_csv("data/WorldCupMatches.csv")
 
 
 
@@ -59,9 +59,11 @@ colnames(Hist_Data)[21]="Result for Home Team"
 ###### !!!Complete!!!
 
 
-Hist1 = Hist_Data %>%
-  group_by(`Home Team Name`) %>%
-  select(`Year`, `Home Team Name`)
+
+Hist1 <- Hist_Data %>%
+  #select(Year, `Home Team Name`)
+  group_by(`Home Team Name`)
+#  select(Hist1, `Home Team Name`)
 
 Histunique = unique(Hist1)
 

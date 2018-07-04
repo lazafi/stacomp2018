@@ -12,8 +12,8 @@ head(countries)
 str(countries)
 summary(countries)
 
-#library(aplpack) 
-#faces(countries[3:20])
+library(aplpack) 
+faces(countries[3:10])
 
 # stars(countries.reg[3:20], labels=countries.reg$Country, len=0.7, cex=0.7,  key.loc=c(15,1.5), flip.labels=FALSE,  draw.segments = TRUE)
 # library(MASS)
@@ -52,7 +52,7 @@ for (col in names(country_rank)) {
   #print(p)
 }
 
-ggpairs(country_rank[,sapply(country_rank, is.numeric)])
+ggbpairs(country_rank[,sapply(country_rank, is.numeric)])
 
 #grid.arrange(grobs = list(plots))
 #arrangeGrob(plots)

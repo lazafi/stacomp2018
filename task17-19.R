@@ -167,8 +167,6 @@ prediction <- predict.matrix(teams.all, model.poisson)
 
 evaluate.wm(prediction, fifa.results)
 
-
-
 predict.wm(model.poisson, "Russia", "Italy")
 
   ggplot() +

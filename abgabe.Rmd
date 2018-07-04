@@ -12,6 +12,8 @@ library(MASS)
 library(rpart)
 library(ggplot2)
 library(gridExtra)
+#library(tidyverse)
+library(data.table)
 
 ```
 
@@ -24,8 +26,47 @@ https://en.wikipedia.org/wiki/Statistical_association_football_predictions
 ### Historic WC Data
 
 * **Task 1.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. Describe the data in a few lines.
+```{r, message=FALSE}
+WorldCup = read.csv("data/WorldCups.csv")
+WorldCupPlay = read.csv("data/WorldCupPlayers.csv")
+
+# Historical DAta 
+WorldCupMatch = read.csv("data/WorldCupMatches.csv")
+
+
+
+
+
+# Task 1: Get familiar with the data using several functions.
+
+str(WorldCupMatch)
+head(WorldCupMatch)
+glimpse(WorldCupMatch)
+#table(WorldCupMatch)
+summary(WorldCupMatch)
+
+```
 
 * **Task 2.** Write a function that generates the result of the game (W, D, L) from the vectors. How would you incorporate the information in the variable `Win.conditions`?
+
+```{r, message=FALSE}
+# Historic WC Data contains relevant information regarding soccer games from World Cups beginning at 1930 and ending at 2014
+# The entries after 2014 are probobly used for 2018 but are currently empty - they display NA
+
+# Task 2: Write a function that generates the result of the game (W, D, L) from the vectors. How would you incorporate the information in the variable Win.condition?
+
+
+Result_Home_Team = ifelse(WorldCupMatch[,7] > WorldCupMatch[,8], "W", ifelse(WorldCupMatch[,7] == WorldCupMatch[,8], "D", "L"))
+
+#Get column with Results for the home team into the big Matrix - History of World Cups
+
+Hist_Data = cbind(WorldCupMatch, Result_Home_Team)
+
+colnames(Hist_Data)[21]="Result for Home Team"
+
+
+```
+
 
 * **Task 3.** Explore the data set using summary statistics and illustrations. 
 
@@ -34,7 +75,123 @@ https://en.wikipedia.org/wiki/Statistical_association_football_predictions
   - How many goals were scored on average by ever nation?
   - etc.
 
+```{r, message=FALSE}
+##How often has every nation participated
+### NarrowData
+
+###### !!!Complete!!!
+
+
+#Hist1 = Hist_Data %>%
+#  group_by(`Home Team Name`)
+#%>%
+#  select(`Year`, `Home Team Name`)
+
+#Histunique = unique(Hist1)
+
+###Gives a tibble with the frequency of participation of every country
+###### !!!Complete!!!
+
+#count(Histunique)
+
+
+### Visualization - Nation that participated most times
+##### !!!Complete!!!
+
+#library(ggplot2)
+
+#Numberofappearance = count(Histunique)
+#Numberofappearance = as.data.frame(Numberofappearance)
+#colnames(Numberofappearance) = c("Team", "nAppearance")
+#Numberofappearance = na.omit(Numberofappearance)
+
+#Numberofappearance %>% 
+#  arrange(desc(nAppearance)) %>% 
+#  subset(nAppearance > 9) %>%
+#  ggplot(aes(x = Team, y = nAppearance)) +
+#  geom_bar(stat = "identity")
+
+```
+
+
+
+## How many Goals were scored on average by every nation?
+## Data Table - Home Team Matrix + Away Team Matrix and before group by
+#### !Complete!
+
+
+
+```{r, message=FALSE}
+Home1 = Hist_Data
+#%>%
+#  select(`Home Team Name`, `Home Team Goals`)
+
+Away1 = Hist_Data
+#%>%
+#  select(`Away Team Name`, `Away Team Goals`)
+
+colnames(Home1) = c("Team", "Goals")
+colnames(Away1) = c("Team", "Goals")
+
+HomeAway = rbind(Home1, Away1)
+
+HomeAway1 = HomeAway %>%
+  group_by(`Team`)
+
+HomeAway1 %>%
+  group_by(`Team`) %>%
+  summarise(mean = mean(`Goals`))
+```
+
+
 * **Task 4.** Do you think this data set can be used to build a predictor function?
+
+ Task 4 - Do you think this data set can be used to build a predictor function?
+ Since this dataset contains result from countries over a long period of time one can investigate trends regarding the strength of any Team. However Teams are changing and their trainers are changing. After a few years the whole Team is completely new and therefore it is possible to get entirely different results. So maybe an overall trend can be observed but to predict  it would be much more accurate to use latest results. Germany is a good example. Being the World Champion before this WC they struggled to maintain good performance e.g. against Austria. In this WC they didn´t make it to the next round and are on the last position in that group. From Historic WC Data this wouldn´t have been possible to predict and many ML algorithms predicted Germany to be champion this year.
+
+
+
+
+
+
+
+
+### FIFA Ranking Data
+
+* **Task 5.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. 
+
+```{r, message=FALSE}
+ranking <- read.csv("data/fifa_ranking.csv")  %>%
+  mutate (
+    rank_date = as.Date(rank_date)
+  )
+```
+
+* **Task 6.** What is the class of `fifa.ranking$rank_date`? Is this a problem? Can you change it to class `date` using `as.Date`? What difference does this make for e.g. plotting?
+
+* **Task 7.** Plot the FIFA ranks for a selection of favorites
+If you use `ggplot()` don't forget to `scale_y_reverse()``
+
+
+```{r, message=FALSE, out.width = '100%'}
+favorites <- c("Germany", "Brazil", "Belgium", "France", "Argentina")
+
+favs_ts <- ranking %>%
+  filter(country_full %in% favorites)
+
+
+ggplot(favs_ts, aes(x=rank_date)) + 
+  geom_line(aes(y=rank, col=country_abrv)) + 
+  scale_y_reverse() +
+  labs(title="WC Ranking", 
+       subtitle="Wold Cup Ranking from 1992",
+       caption="Source: FIFA",
+       y="FIFA Ranking",
+       x="Date")
+
+```
+
+
 
 ```{r, message=FALSE}
 
@@ -46,18 +203,53 @@ summary(matches)
 
 
 
-### FIFA Ranking Data
+```{r, message=FALSE, out.width = '100%'}
+ranking_de <- ranking  %>%
+  filter(
+    country_abrv == "GER"
+  )  %>%
+  select(
+    rank_date, 
+#    cur_year_avg,
+#    cur_year_avg_weighted
+ matches("*avg*"),
+ - country_full,
+ - country_abrv,
+ - confederation
+         ) %>%
+  gather(key = "variable", value = "value", -rank_date)
 
-* **Task 5.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. 
-
-* **Task 6.** What is the class of `fifa.ranking$rank_date`? Is this a problem? Can you change it to class `date` using `as.Date`? What difference does this make for e.g. plotting?
-
-* **Task 7.** Plot the FIFA ranks for a selection of favorites
-```{r }
-favorites <- c("Germany", "Brazil", "Belgium", "France", "Argentinia")
+ggplot(ranking_de, aes(x = rank_date, y = value)) + 
+  geom_line(aes(color = variable)) +
+#  scale_color_manual(values = c("#00AFBB", "#E7B800")) +
+  theme_minimal()
 ```
-If you use `ggplot()` don't forget to `scale_y_reverse()``
 
+```{r, message=FALSE, out.width = '100%'}
+med_rank_by_country <- ranking %>%
+group_by(country_abrv) %>%
+  summarise(
+    med_rank = median(rank)
+    ) %>%
+  arrange(med_rank)  %>%
+ transmute(country_abrv = as.character(country_abrv),
+           med_rank = med_rank)
+
+first20 <- med_rank_by_country[1:20,] %>%
+  arrange(med_rank)  %>%
+  transmute(country_abrv = as.factor(country_abrv, levels=country_abrv),
+            med_rank = med_rank)
+head(first20)
+
+# TODO: order by rank
+ggplot(first20, aes(x=country_abrv, y=med_rank)) + 
+  geom_bar(stat="identity", width=.5, fill="tomato3") + 
+  labs(title="Ordered Bar Chart", 
+       subtitle="Make Vs Avg. Mileage", 
+       caption="source: mpg") + 
+  theme(axis.text.x = element_text(angle=65, vjust=0.6))
+
+```
 
 ### Transfermarkt.de Data
 
@@ -119,16 +311,72 @@ hint: use `read_html()`, `html_nodes()` with the css selectors ".item" or "td", 
 
 * **Task 12.** Link the FIFA Ranks with this data by means of the country names and generate a scatterplot of the rank against the population, gdp etc. Which of the socio economic variables contains some information about the teams performance?
 
+```{r, message=FALSE, out.width = '100%'}
+countries <- read.csv("data/countries of the world.csv", dec = ",", strip.white=TRUE) %>%
+  arrange(Region)  %>%
+  mutate(
+    key = gsub("&", "and", trimws(Country)),
+  )
+
+#calculate median rank
+# TODO find better metrics of rank
+med_rank_by_country <- read.csv("data/fifa_ranking.csv")  %>%
+  group_by(country_full) %>%
+  summarise(
+    med_rank = median(rank),
+    mean_rank = mean(rank)
+  ) %>%
+  arrange(med_rank)  %>%
+  transmute(
+    country_full =country_full,
+            med_rank = med_rank,
+            mean_rank = mean_rank,
+            key =  gsub("&", "and", trimws(as.character(country_full)))
+  )
+
+str(med_rank_by_country)
+str(countries)
+country_rank <- merge(med_rank_by_country, countries , by="key", all=TRUE)
+
+ggbpairs(country_rank[,sapply(country_rank, is.numeric)])
+
+```
 
 ### Evaluation
 
 * **Task 13.** Implement the evaluation metric. This is a function with two arguments: the prediction matrix $R$ and a data structure with the true results $R_{true}$. Note, that this data structure should not be a matrix since two teams may compete twice against each other during the course of a world cup tournament. What data structure would you suggest?
 
+```{r, message=FALSE, out.width = '100%'}
+evaluate.wm <- function(prediction, results) {
+     results <- results %>%
+     mutate(
+       accurate = if (!is.na(result)) {result == prediction[home.team][away.team]} else { NA }
+     )
+   sum(results$accurate, na.rm=TRUE)/sum( !is.na( results$result ) ) 
+}
+```
+
 * **Task 14.** Generate a matrix of random predictions to test this function. Don't forget, that this matrix is symmetric and that the diagonal should only contain NAs. 
+
+TODO!!!!
 
 * **Task 15.** Generate (hypothetic) true results and test the function of Task 14.
 
+```{r, message=FALSE, out.width = '100%'}
+fifa.results <- read.csv("data/fifa-world-cup-2018-RussianStandardTime-Results.csv", stringsAsFactors=TRUE, strip.white=TRUE, na.strings = "") %>%
+  transmute(
+    home.team= Home.Team,
+    away.team=Away.Team,
+    result = res
+  )
+
+```
+
 * **Task 16.** A completely naive predictor, which randomly predicts the outcome with equal probabilites, should serve as a benchmark. What is the expected rate of correct predictions?
+
+```{r, message=FALSE, out.width = '100%'}
+#TODO
+```
   
 ### Prediction
 
@@ -351,5 +599,36 @@ prediction <- predict.matrix(teams.all, model.poisson)
 evaluate.wm(prediction, fifa.results)
 ```
 
+```{r, message=FALSE, out.width = '100%'}
 
+set.seed(2)
+
+TrainingssetHist = HistWDL[sample(nrow(HistWDL), 4200), ]
+TestsetHist = HistWDL[sample(nrow(HistWDL), 100), ]
+
+TestsetHist = na.omit(TestsetHist)
+TrainingssetHist = na.omit(TrainingssetHist)
+
+Hist_Model = glm(`Home Team Goals` ~ `Home Team Name` + `Away Team Name` + `Away Team Goals`, data = TrainingssetHist)
+
+summary(Hist_Model)
+
+TestsetHist$PredictHist = predict(Hist_Model, newdata = TestsetHist, droplevels = TRUE)
+
+
+## Visualization of Model
+##### !!!Complete!!!!
+
+ggplot(data = TestsetHist, aes(x = `Home Team Goals`, y = PredictHist))+
+  geom_point()+
+  geom_abline(color = "blue")
+
+## Evaluation
+##### !!!Complete!!!
+fitModel = lm(TestsetHist$`Home Team Goals` ~ TestsetHist$PredictHist)
+
+summary(fitModel)
+
+
+```
   
