@@ -56,6 +56,8 @@ colnames(Hist_Data)[21]="Result for Home Team"
 ##How often has every nation participated
 ### NarrowData
 
+###### !!!Complete!!!
+
 
 Hist1 = Hist_Data %>%
   group_by(`Home Team Name`) %>%
@@ -64,11 +66,13 @@ Hist1 = Hist_Data %>%
 Histunique = unique(Hist1)
 
 ###Gives a tibble with the frequency of participation of every country
+###### !!!Complete!!!
 
 count(Histunique)
 
 
 ### Visualization - Nation that participated most times
+##### !!!Complete!!!
 
 library(ggplot2)
 
@@ -86,6 +90,9 @@ Numberofappearance %>%
 
 
 
+
+
+
 ## Create a table with the number of wins/draws/losses of every nation
 
 HistWDL = Hist_Data %>%
@@ -98,8 +105,15 @@ HistWDL2 = cbind(HistWDL, Result_Home_Team)
 
 
 
+
+
+
+
 ## How many Goals were scored on average by every nation?
 ## Data Table - Home Team Matrix + Away Team Matrix and before group by
+#### !Complete!
+
+
 
 Home1 = Hist_Data %>%
   select(`Home Team Name`, `Home Team Goals`)
@@ -118,6 +132,10 @@ HomeAway1 = HomeAway %>%
 HomeAway1 %>%
   group_by(`Team`) %>%
   summarise(mean = mean(`Goals`))
+
+
+
+
   
 
 
@@ -128,14 +146,21 @@ HomeAway1 %>%
 ## In this WC they didn´t make it to the next round and are on the last position in that group. From Historic WC Data this wouldn´t have been possible to predict and many ML algorithms predicted
 ## Germany to be champion this year.
 
+##### !!!Complete!!!
+
+
+
+
+
 
 # Task 8 - Have a look on the following website https://www.transfermarkt.com/weltmeisterschaft-2018/startseite/pokalwettbewerb/WM18. Where can you find detailed information from the past world cups?
 
 ## In the section "History" and "Statistics" can be found lots of information regarding participation, goals, Market value, age....
-
+######!!!Complete !!!!
 
 
 # Task 9 - (voluntary) Browse the vignette of the following package:
+##### !!!!Complete!!!!
 library(rvest)
 
 
@@ -212,3 +237,92 @@ extract_node <- function(node){
     html_text()
 }
 
+
+
+
+
+Transferlist1 <- lapply(links.transfermarkt, function(i) {
+  webpage <- read_html(i)
+  draft_table <- html_nodes(webpage, 'td')
+  draft <- html_table(draft_table)[[i]]
+})
+
+
+
+
+
+
+url = "https://www.transfermarkt.com/uruguay/startseite/verein/3449"
+
+
+
+## Getting Webpage list
+
+for(i in 1:32) {
+  webpage = c()
+  webpage[i] = read_html(links.transfermarkt[i])
+}
+
+for(i in 1:32) {
+  NodesName = list()
+  Countrytransfer = list()
+  NodesName[i] = html_nodes(webpage[1], 'b')
+  html_children() %>%
+  html_text()
+  
+}
+
+
+for(i in 1:32) {
+  NodesName = list()
+  Countrytransfer = list()
+  NodesName[1] = html_nodes(webpage[i], 'b')
+  Countrytransfer[i] = html_text(NodesName[i])
+  
+  
+
+
+
+Dates_data_html = html_nodes(webpage, '.dates_location')
+Dates_data = html_text(Dates_data_html)
+
+
+# Evaluation
+
+# Task 13 - Implement the evaluation metric. This is a function with two 
+# arguments: the prediction matrix $R$ and a data structure with the true 
+# results $R_{true}$. Note, that this data structure should not be a matrix 
+# since two teams may compete twice against each other during the course of
+# a world cup tournament. What data structure would you suggest?
+
+## Fit a model
+#### !!!Complete !!!!
+
+TrainingssetHist = HistWDL[sample(nrow(HistWDL), 4200), ]
+TestsetHist = HistWDL[sample(nrow(HistWDL), 100), ]
+
+TestsetHist = na.omit(TestsetHist)
+TrainingssetHist = na.omit(TrainingssetHist)
+
+Hist_Model = glm(`Home Team Goals` ~ `Home Team Name` + `Away Team Name` + `Away Team Goals`, data = TrainingssetHist)
+
+summary(Hist_Model)
+
+TestsetHist$PredictHist = predict(Hist_Model, newdata = TestsetHist, droplevels = TRUE)
+
+
+## Visualization of Model
+##### !!!Complete!!!!
+
+ggplot(data = TestsetHist, aes(x = `Home Team Goals`, y = PredictHist))+
+  geom_point()+
+  geom_abline(color = "blue")
+
+## Evaluation
+##### !!!Complete!!!
+fitModel = lm(TestsetHist$`Home Team Goals` ~ TestsetHist$PredictHist)
+
+summary(fitModel)
+
+
+# 
