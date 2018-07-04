@@ -16,7 +16,7 @@ fifa_rank = read_csv("fifa_ranking.csv")
 WorldCup = read_csv("WorldCups.csv")
 WorldCupPlay = read_csv("WorldCupPlayers.csv")
 
-# Historical DAta ?
+# Historical DAta 
 WorldCupMatch = read_csv("WorldCupMatches.csv")
 
 
@@ -298,6 +298,8 @@ Dates_data = html_text(Dates_data_html)
 ## Fit a model
 #### !!!Complete !!!!
 
+set.seed(2)
+
 TrainingssetHist = HistWDL[sample(nrow(HistWDL), 4200), ]
 TestsetHist = HistWDL[sample(nrow(HistWDL), 100), ]
 
@@ -325,4 +327,33 @@ fitModel = lm(TestsetHist$`Home Team Goals` ~ TestsetHist$PredictHist)
 summary(fitModel)
 
 
-# 
+
+####Poisson Verteilung
+
+set.seed(1)
+
+TrainingssetHist = HistWDL[sample(nrow(HistWDL), 4200), ]
+TestsetHist = HistWDL[sample(nrow(HistWDL), 100), ]
+
+TestsetHist = na.omit(TestsetHist)
+TrainingssetHist = na.omit(TrainingssetHist)
+
+Hist_Modelpoi = glm(`Home Team Goals` ~ `Home Team Name` + `Away Team Name` + `Away Team Goals`, data = TrainingssetHist, family = "poisson")
+
+summary(Hist_Modelpoi)
+
+TestsetHist$PredictHist = predict(Hist_Modelpoi, newdata = TestsetHist, droplevels = TRUE)
+
+
+## Visualization of Model
+##### !!!Complete!!!!
+
+ggplot(data = TestsetHist, aes(x = `Home Team Goals`, y = PredictHist))+
+  geom_point()+
+  geom_abline(color = "blue")
+
+## Evaluation
+##### !!!Complete!!!
+fitModel = lm(TestsetHist$`Home Team Goals` ~ TestsetHist$PredictHist)
+
+summary(fitModel)
