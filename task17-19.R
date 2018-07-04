@@ -5,6 +5,7 @@ library(statisticalModeling)
 library(rpart)
 library(ggplot2)
 
+
 matches <- read.csv("data/WorldCupMatches.csv") 
 head(matches)
 str(matches)
@@ -17,93 +18,176 @@ teams.fav <- c("Russia", "Portugal", "France", "Argentina")
 
 matches <- matches %>%
   filter(
+      Away.Team.Name %in% teams.all | Home.Team.Name %in% teams.all,
       Year >= 1970
       )
 
+some.team <- matches %>%
+  filter(Home.Team.Name=="Italy")
+
+some.home.hist <- some.team %>%
+  group_by(Home.Team.Goals) %>%
+  summarize(density=n()/nrow(.)) %>%
+  mutate(goals = Home.Team.Goals)
+  
+some.home.hist$pois <- dpois(some.home.hist$goals, mean(some.team$Home.Team.Goals))
+
+ggplot(some.home.hist)  +
+  geom_col(aes(x=goals,y=density, fill=as.factor("real"))) +
+  geom_line(aes(x=goals,y=pois, fill=as.factor("poisson")), color="#f8766d", size=2) +
+  scale_fill_manual(values=c("#f8766d","#04bfc4"), name="Verteilung") 
+
+some.away.hist <- some.team %>%
+  group_by(Away.Team.Goals) %>%
+  summarize(density=n()/nrow(.)) %>%
+  mutate(goals = Away.Team.Goals)
+
+some.away.hist$pois <- dpois(some.away.hist$goals, mean(some.team$Away.Team.Goals))
+
+ggplot(some.away.hist)  +
+  geom_col(aes(x=goals,y=density, fill=as.factor("real"))) +
+  geom_line(aes(x=goals,y=pois, fill=as.factor("poisson")), color="#f8766d", size=2) +
+  scale_fill_manual(values=c("#f8766d","#04bfc4"), name="Verteilung") 
+
+## ALL home goals distribution (offensive)
+t.offensive <- matches %>%
+  group_by(Home.Team.Goals) %>%
+  summarize(density=n()/nrow(.)) %>%
+  mutate(goals = Home.Team.Goals)
+
+t.offensive$pois <- dpois(t.offensive$goals, mean(matches$Home.Team.Goals))
+
+ggplot(t.offensive)  +
+  geom_col(aes(x=goals,y=density, fill=as.factor("real"))) +
+  geom_line(aes(x=goals,y=pois, fill=as.factor("poisson")), color="#f8766d", size=2) +
+  scale_fill_manual(values=c("#f8766d","#04bfc4"), name="Verteilung") +
+  scale_x_continuous(breaks=c(0,2,4,6,8,10))
+
+
+## ALL away goals distribution (deffensive)
+t.defensive <- matches %>%
+  group_by(Away.Team.Goals) %>%
+  summarize(density=n()/nrow(.)) %>%
+  mutate(goals = Away.Team.Goals)
+
+t.defensive$pois <- dpois(t.defensive$goals, mean(matches$Away.Team.Goals))
+
+ggplot(t.defensive)  +
+  geom_col(aes(x=goals,y=density, fill=as.factor("real"))) +
+  geom_line(aes(x=goals,y=pois, fill=as.factor("poisson")), color="#f8766d", size=2)  +
+  scale_fill_manual(values=c("#f8766d","#04bfc4"), name="Verteilung") 
+
+#training the model
+
 matches.a <- matches %>%
   transmute(
-    home.team = Home.Team.Name,
-    home.goals = Home.Team.Goals,
-    away.team = Away.Team.Name,
-    away.goals = Away.Team.Goals
+    team = Home.Team.Name,
+    goals = Home.Team.Goals,
+    opponent = Away.Team.Name,
   )
-
 matches.b <- matches %>%
   transmute(
-    away.team = Home.Team.Name,
-    away.goals = Home.Team.Goals,
-    home.team = Away.Team.Name,
-    home.goals = Away.Team.Goals
+    team = Away.Team.Name,
+    goals = Away.Team.Goals,
+    opponent = Home.Team.Name,
   )
 
-rest <- expand.grid(away.team = c("Panama", "Peru", "Iceland"),
-            away.goals =  0,
-            home.team = c("Panama", "Peru", "Iceland"),
-            home.goals = 0
-            )
+rest <- expand.grid(team = c("Panama", "Peru", "Iceland"),
+                    opponent = c("Panama", "Peru", "Iceland"),
+                    goals = 0
+)
 
-# peru.vs.panama <- data.frame(    
-#   away.team = factor("Panama"),
-#   away.goals =  0,
-#   home.team =  factor("Peru"),
-#   home.goals = 0
-# )
-# 
-# panama.vs.peru <- data.frame(    
-#   away.team = factor("Peru"),
-#   away.goals =  0,
-#   home.team =  factor("Panama"),
-#   home.goals = 0
-# )
+model.poisson <- rbind(matches.a, matches.b, rest) %>%
+  glm(data=., goals ~ team + opponent, family="poisson")
 
-matches <- rbind(matches.a, matches.b, rest)
-
-ggplot(matches)  +
-  geom_histogram(aes(home.goals), col=1) +
-  geom_histogram(aes(away.goals), col=2)
-
-#filter(matches,
-#       Home.Team.Name=="Iceland"
-#)
-
-#filter(matches,
-#       (Home.Team.Name=="Brazil" |
-#         Away.Team.Name == "Brazil" )
-#       &
-#        (Home.Team.Name=="Germany" |
-#         Away.Team.Name == "Germany" )
-#         )
+summary(model.poisson)
 
 
-m.home <- glm(home.goals ~ home.team + away.team, family="poisson", data=matches)
-m.away <- glm(away.goals ~ home.team + away.team, family="poisson", data=matches)
+testdata <-data.frame(team=c("Italy", "Russia"),opponent=c("Russia", "Italy"))
 
-#m.home.logit <- glm(h ~ Home.Team.Name + Away.Team.Name, family="quasibinomial", data=matches)
+#prediction <- predict(m.home, newdata=testdata)
 
-#m.lm <- lm(y ~ Home.Team.Name + Away.Team.Name, data=matches)
-#m.rpart <- rpart(y ~ Home.Team.Name + Away.Team.Name, data=matches, , cp=0.02)
+testdata$prediction <- predict(model.poisson, newdata=testdata, type="response")
+
+testdata
 
 
-newdata1 <- data.frame(away.team=c("Germany", "Brazil", "Belgium", "France", "Argentina"),
-                       home.team=rev(c("Germany", "Brazil", "Belgium", "France", "Argentina")))
 
-newdata2 <- data.frame(away.team=c("Germany"),
-                       home.team=c("Brazil"))
+predict.wm <- function(model, home.team, away.team) {
+  #model=model.poisson
+  #home.team="Russia"
+  #away.team="Italy"
+    input <- data.frame(team=c(home.team, away.team),opponent=c(away.team, home.team))
+    input$prediction <- predict(model, newdata=input, type="response")
+    
+    m <- dpois(0:10, input[1,]$prediction) %o%  dpois(0:10, input[2,]$prediction)
+    
+    r <- c(
+      '1' = sum(m[lower.tri(m)]),  
+      X = sum(diag(m)),
+      '2' = sum(m[upper.tri(m)])
+    )
+    #max(home.prob, draw.prob, away.prob)
+    #colname(max(r))
+    names(which.max(r))
+}
 
-newdata2 <- data.frame(away.team=all,
-                       home.team=rev(all))
+predict.matrix <- function(teams, model) {
+  #teams <- teams.all
+  #model <- model.poisson
+  m <- matrix(0, nrow = length(teams), ncol = length(teams), dimnames = list(teams, teams))
+  diag(m) <- NA
 
-expand.grid(away.team=c("Germany", "Brazil", "Belgium", "France", "Argentina"),
-            home.team=c("Germany", "Brazil", "Belgium", "France", "Argentina"))
+  for(j in 1:ncol(m)){
+    for(i in 1:nrow(m)){
+      if (i != j) {
+        m[i,j] = predict.wm(model, colnames(m)[i], colnames(m)[j])
+      }
+    }
+  } 
+  m
+}
 
-summary(m.home)
+evaluate.wm <- function(prediction, results) {
+     results <- results %>%
+     mutate(
+       accurate = if (!is.na(result)) {result == prediction[home.team][away.team]} else { NA }
+     )
+   sum(results$accurate, na.rm=TRUE)/sum( !is.na( results$result ) ) 
+}
 
-testdata <- expand.grid(away.team=teams.fav,home.team=teams.fav)
+fifa.results <- read.csv("data/fifa-world-cup-2018-RussianStandardTime-Results.csv", stringsAsFactors=TRUE, strip.white=TRUE, na.strings = "") %>%
+  transmute(
+    home.team= Home.Team,
+    away.team=Away.Team,
+    result = res
+  )
 
-prediction <- predict(m.home, newdata=testdata)
+prediction <- predict.matrix(teams.all, model.poisson)
 
-cbind(testdata, prediction)
+evaluate.wm(prediction, fifa.results)
 
+
+
+predict.wm(model.poisson, "Russia", "Italy")
+
+  ggplot() +
+    geom_line(aes(x=0:10,y=dpois(0:10, result[1,]$prediction), color=as.factor("home")), size=2) +
+    geom_line(aes(x=0:10,y=dpois(0:10, result[2,]$prediction), color=as.factor("away")), size=2) +
+    geom_vline(xintercept=result[1,]$prediction, color="#04bfc4") +
+    geom_vline(xintercept=result[2,]$prediction, color="#f8766d") +
+    scale_x_continuous(breaks=c(0,2,4,6,8,10))
+  
+  dpois(0:4, result[1,]$prediction)
+  dpois(0:4, result[2,]$prediction)
+  
+    ppois(result[1,]$prediction, result[1,]$prediction) -  ppois(result[1,]$prediction, result[1,]$prediction, lower=FALSE)
+  
+  #geom_vline(xintercept=testdata[2,]$prediction) 
+#rpoisline(1)
+#skellam::dskellam(0,mean(ger.home$home.goals),mean(ger.home$away.goals))
+#predProbs<-predict(poislm,data.frame(y=seq(min(y), max(y), length.out=100)), type="response")
+#lines(seq(min(y), max(y), length.out=100), predProbs, col=2, lwd=2)
 
 
 
