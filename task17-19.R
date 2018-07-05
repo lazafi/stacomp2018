@@ -169,17 +169,17 @@ evaluate.wm(prediction, fifa.results)
 
 predict.wm(model.poisson, "Russia", "Italy")
 
-  ggplot() +
-    geom_line(aes(x=0:10,y=dpois(0:10, result[1,]$prediction), color=as.factor("home")), size=2) +
-    geom_line(aes(x=0:10,y=dpois(0:10, result[2,]$prediction), color=as.factor("away")), size=2) +
-    geom_vline(xintercept=result[1,]$prediction, color="#04bfc4") +
-    geom_vline(xintercept=result[2,]$prediction, color="#f8766d") +
-    scale_x_continuous(breaks=c(0,2,4,6,8,10))
-  
-  dpois(0:4, result[1,]$prediction)
-  dpois(0:4, result[2,]$prediction)
-  
-    ppois(result[1,]$prediction, result[1,]$prediction) -  ppois(result[1,]$prediction, result[1,]$prediction, lower=FALSE)
+  # ggplot() +
+  #   geom_line(aes(x=0:10,y=dpois(0:10, result[1,]$prediction), color=as.factor("home")), size=2) +
+  #   geom_line(aes(x=0:10,y=dpois(0:10, result[2,]$prediction), color=as.factor("away")), size=2) +
+  #   geom_vline(xintercept=result[1,]$prediction, color="#04bfc4") +
+  #   geom_vline(xintercept=result[2,]$prediction, color="#f8766d") +
+  #   scale_x_continuous(breaks=c(0,2,4,6,8,10))
+  # 
+  # dpois(0:4, result[1,]$prediction)
+  # dpois(0:4, result[2,]$prediction)
+  # 
+  #   ppois(result[1,]$prediction, result[1,]$prediction) -  ppois(result[1,]$prediction, result[1,]$prediction, lower=FALSE)
   
   #geom_vline(xintercept=testdata[2,]$prediction) 
 #rpoisline(1)

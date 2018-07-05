@@ -1,31 +1,50 @@
 ---
 title: "StatComp 2018 WC"
+subtitle: "Abgabe"
+author: "Attila Lázár (Matr. Nr. 0026842) TODO:Mathias"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+## Tools Used 
 
+We used R for our experiments and visualisations. First we load the libraries we will use. Some funtions are masked by other libraries, we explicilty name them to avoid collisions.
 
+```{r setup, include=TRUE, echo=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+```{r libs, include=TRUE}
 library(dplyr)
 library(MASS)
 library(rpart)
 library(ggplot2)
+library(GGally)
 library(gridExtra)
-#library(tidyverse)
+library(tidyverse)
 library(data.table)
+library(futile.matrix)
+
+
+# avoid collisions
+select <- dplyr::select 
+arrange <- dplyr::arrange 
+filter <- dplyr::filter
 
 ```
-
-###Info Sources
-
-https://en.wikipedia.org/wiki/Statistical_association_football_predictions
 
 
 
 ### Historic WC Data
 
 * **Task 1.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. Describe the data in a few lines.
+
+* WorldCupPayers 
+* WorldCupMatches Historic WC Data contains relevant information regarding soccer games from World Cups beginning at 1930 and ending at 2014. The entries after 2014 are probobly used for 2018 but are currently empty - they display NA
+
 ```{r, message=FALSE}
 WorldCup = read.csv("data/WorldCups.csv")
 WorldCupPlay = read.csv("data/WorldCupPlayers.csv")
@@ -33,36 +52,29 @@ WorldCupPlay = read.csv("data/WorldCupPlayers.csv")
 # Historical DAta 
 WorldCupMatch = read.csv("data/WorldCupMatches.csv")
 
-
-
-
-
 # Task 1: Get familiar with the data using several functions.
 
-str(WorldCupMatch)
-head(WorldCupMatch)
-glimpse(WorldCupMatch)
+#str(WorldCupMatch)
+#head(WorldCupMatch)
+#glimpse(WorldCupMatch)
 #table(WorldCupMatch)
-summary(WorldCupMatch)
+#summary(WorldCupMatch)
 
 ```
 
 * **Task 2.** Write a function that generates the result of the game (W, D, L) from the vectors. How would you incorporate the information in the variable `Win.conditions`?
 
+$Win.conditions$ contains information if the game was decided with extratime or penalties. As we do predictions we will decide whether we use this games for training or we use only regullarly decided games.
+
 ```{r, message=FALSE}
-# Historic WC Data contains relevant information regarding soccer games from World Cups beginning at 1930 and ending at 2014
-# The entries after 2014 are probobly used for 2018 but are currently empty - they display NA
+result_code <- function(data, code) {
+  ifelse(data[,7] > data[,8], code[1], ifelse(data[,7] == data[,8], code[2], code[3]))
+}
 
-# Task 2: Write a function that generates the result of the game (W, D, L) from the vectors. How would you incorporate the information in the variable Win.condition?
 
-
-Result_Home_Team = ifelse(WorldCupMatch[,7] > WorldCupMatch[,8], "W", ifelse(WorldCupMatch[,7] == WorldCupMatch[,8], "D", "L"))
-
-#Get column with Results for the home team into the big Matrix - History of World Cups
-
-Hist_Data = cbind(WorldCupMatch, Result_Home_Team)
-
-colnames(Hist_Data)[21]="Result for Home Team"
+#Get column with Results for the home team into the original dataframe - History of World Cups
+Hist_Data = cbind(WorldCupMatch, result_code(WorldCupMatch, c("W","D","L")))
+colnames(Hist_Data)[21]="Result.for.Home.Team"
 
 
 ```
@@ -71,64 +83,68 @@ colnames(Hist_Data)[21]="Result for Home Team"
 * **Task 3.** Explore the data set using summary statistics and illustrations. 
 
   - How often has every nation participated?
-  - Create a table with the number of wins/draws/losses for ever nation.
-  - How many goals were scored on average by ever nation?
-  - etc.
 
-```{r, message=FALSE}
+```{r, message=FALSE, out.width = '100%'}
 ##How often has every nation participated
 ### NarrowData
 
-###### !!!Complete!!!
+Hist1 = Hist_Data %>%
+  group_by(`Home.Team.Name`) %>%
+  select(`Year`, `Home.Team.Name`)
 
-
-#Hist1 = Hist_Data %>%
-#  group_by(`Home Team Name`)
-#%>%
-#  select(`Year`, `Home Team Name`)
-
-#Histunique = unique(Hist1)
+Histunique = unique(Hist1)
 
 ###Gives a tibble with the frequency of participation of every country
-###### !!!Complete!!!
-
-#count(Histunique)
+count(Histunique)
 
 
 ### Visualization - Nation that participated most times
-##### !!!Complete!!!
 
-#library(ggplot2)
+Numberofappearance = count(Histunique)
+Numberofappearance = as.data.frame(Numberofappearance)
+colnames(Numberofappearance) = c("Team", "nAppearance")
+Numberofappearance = na.omit(Numberofappearance)
 
-#Numberofappearance = count(Histunique)
-#Numberofappearance = as.data.frame(Numberofappearance)
-#colnames(Numberofappearance) = c("Team", "nAppearance")
-#Numberofappearance = na.omit(Numberofappearance)
+Numberofappearance %>% 
+  subset(nAppearance > 9) %>%
+  arrange(desc(nAppearance)) %>% 
+  ggplot(aes(x = Team, y = nAppearance)) +
+  geom_bar(stat = "identity",  fill="tomato3") +
+    labs(title="WC Participation", 
+       caption="Source: FIFA",
+       y="Participation Count",
+       x="")
 
-#Numberofappearance %>% 
-#  arrange(desc(nAppearance)) %>% 
-#  subset(nAppearance > 9) %>%
-#  ggplot(aes(x = Team, y = nAppearance)) +
-#  geom_bar(stat = "identity")
+```
+  - Create a table with the number of wins/draws/losses for ever nation.
+  
+  
+```{r, message=FALSE}
+head(
+Hist_Data %>%
+  select(`Home.Team.Name`, `Result.for.Home.Team`) %>%
+  group_by(`Home.Team.Name`) %>%
+  summarise(
+    wins = sum( ifelse( Result.for.Home.Team == "W", 1, 0 ) ),
+    draws = sum( ifelse( Result.for.Home.Team == "D", 1, 0 ) ),
+    losses = sum( ifelse( Result.for.Home.Team == "L", 1, 0 ) )
+  )  %>%
+  arrange(desc(wins))
+)
+
 
 ```
 
-
-
-## How many Goals were scored on average by every nation?
-## Data Table - Home Team Matrix + Away Team Matrix and before group by
-#### !Complete!
-
+  - How many goals were scored on average by ever nation?
+  - etc.
 
 
 ```{r, message=FALSE}
-Home1 = Hist_Data
-#%>%
-#  select(`Home Team Name`, `Home Team Goals`)
+Home1 = Hist_Data %>%
+  select(`Home.Team.Name`, `Home.Team.Goals`)
 
-Away1 = Hist_Data
-#%>%
-#  select(`Away Team Name`, `Away Team Goals`)
+Away1 = Hist_Data %>%
+  select(`Away.Team.Name`, `Away.Team.Goals`)
 
 colnames(Home1) = c("Team", "Goals")
 colnames(Away1) = c("Team", "Goals")
@@ -138,27 +154,25 @@ HomeAway = rbind(Home1, Away1)
 HomeAway1 = HomeAway %>%
   group_by(`Team`)
 
-HomeAway1 %>%
-  group_by(`Team`) %>%
-  summarise(mean = mean(`Goals`))
+head(
+  HomeAway1 %>%
+    group_by(`Team`) %>%
+    summarise(mean = mean(`Goals`)) %>%
+    arrange(desc(mean))
+)
 ```
 
 
 * **Task 4.** Do you think this data set can be used to build a predictor function?
 
- Task 4 - Do you think this data set can be used to build a predictor function?
- Since this dataset contains result from countries over a long period of time one can investigate trends regarding the strength of any Team. However Teams are changing and their trainers are changing. After a few years the whole Team is completely new and therefore it is possible to get entirely different results. So maybe an overall trend can be observed but to predict  it would be much more accurate to use latest results. Germany is a good example. Being the World Champion before this WC they struggled to maintain good performance e.g. against Austria. In this WC they didn´t make it to the next round and are on the last position in that group. From Historic WC Data this wouldn´t have been possible to predict and many ML algorithms predicted Germany to be champion this year.
-
-
-
-
-
-
-
+Since this dataset contains result from countries over a long period of time one can investigate trends regarding the strength of any Team. However Teams are changing and their trainers are changing. After a few years the whole Team is completely new and therefore it is possible to get entirely different results. So maybe an overall trend can be observed but to predict, it would be much more accurate to use latest results. Germany is a good example. Being the World Champion before this WC they struggled to maintain good performance e.g. against Austria. In this WC they didn´t make it to the next round and are on the last position in that group. From Historic WC Data this wouldn´t have been possible to predict and many ML algorithms predicted Germany to be champion this year.
 
 ### FIFA Ranking Data
 
 * **Task 5.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. 
+* **Task 6.** What is the class of `fifa.ranking$rank_date`? Is this a problem? Can you change it to class `date` using `as.Date`? What difference does this make for e.g. plotting?
+
+We use $mutate$ from $dplyr$ package to convert `rank_date`. This conversion is meaningfull because, as we can see later in the plots, the plotting library can format the dates appropriately. Also if we could analyse the data as timeseries.
 
 ```{r, message=FALSE}
 ranking <- read.csv("data/fifa_ranking.csv")  %>%
@@ -167,7 +181,6 @@ ranking <- read.csv("data/fifa_ranking.csv")  %>%
   )
 ```
 
-* **Task 6.** What is the class of `fifa.ranking$rank_date`? Is this a problem? Can you change it to class `date` using `as.Date`? What difference does this make for e.g. plotting?
 
 * **Task 7.** Plot the FIFA ranks for a selection of favorites
 If you use `ggplot()` don't forget to `scale_y_reverse()``
@@ -181,7 +194,7 @@ favs_ts <- ranking %>%
 
 
 ggplot(favs_ts, aes(x=rank_date)) + 
-  geom_line(aes(y=rank, col=country_abrv)) + 
+  geom_line(aes(y=rank, col=country_full)) + 
   scale_y_reverse() +
   labs(title="WC Ranking", 
        subtitle="Wold Cup Ranking from 1992",
@@ -191,16 +204,7 @@ ggplot(favs_ts, aes(x=rank_date)) +
 
 ```
 
-
-
-```{r, message=FALSE}
-
-matches <- read.csv("data/WorldCupMatches.csv") 
-head(matches)
-str(matches)
-summary(matches)
-```
-
+Besides an overal $rank$ the data also provides various other variables. To get an idea about the numbers we plotted some of them for Germany.
 
 
 ```{r, message=FALSE, out.width = '100%'}
@@ -221,32 +225,46 @@ ranking_de <- ranking  %>%
 
 ggplot(ranking_de, aes(x = rank_date, y = value)) + 
   geom_line(aes(color = variable)) +
+  xlim(c(as.Date("2010-01-01"),as.Date("2019-01-01"))) +
 #  scale_color_manual(values = c("#00AFBB", "#E7B800")) +
+  labs(title="Germany", 
+       subtitle="Ranking metrics",
+       caption="Source: FIFA",
+       y="value of metric",
+       x="Date") +
   theme_minimal()
 ```
 
+As an simple metrik we calculated the median fifa-rank for every country. We plotted the first 20.
+
 ```{r, message=FALSE, out.width = '100%'}
 med_rank_by_country <- ranking %>%
+arrange(rank_date)  %>%
 group_by(country_abrv) %>%
   summarise(
-    med_rank = median(rank)
-    ) %>%
+    med_rank = median(rank),
+    last_rank = last(rank)
+) %>%
   arrange(med_rank)  %>%
- transmute(country_abrv = as.character(country_abrv),
-           med_rank = med_rank)
+  transmute(country_abrv = as.character(country_abrv),
+           med_rank = med_rank,
+           last_rank = last_rank)
 
 first20 <- med_rank_by_country[1:20,] %>%
-  arrange(med_rank)  %>%
-  transmute(country_abrv = as.factor(country_abrv, levels=country_abrv),
-            med_rank = med_rank)
+  arrange(last_rank)  %>%
+  transmute(
+    country_abrv = as.factor(country_abrv),
+            med_rank = med_rank,
+           last_rank = last_rank)
+
 head(first20)
 
-# TODO: order by rank
-ggplot(first20, aes(x=country_abrv, y=med_rank)) + 
+ggplot(first20, aes(x=country_abrv, y=last_rank)) + 
   geom_bar(stat="identity", width=.5, fill="tomato3") + 
-  labs(title="Ordered Bar Chart", 
-       subtitle="Make Vs Avg. Mileage", 
-       caption="source: mpg") + 
+  labs(title="Last Rank", 
+       caption="source: fifa",
+       y="Rank",
+       x="") + 
   theme(axis.text.x = element_text(angle=65, vjust=0.6))
 
 ```
@@ -309,42 +327,71 @@ hint: use `read_html()`, `html_nodes()` with the css selectors ".item" or "td", 
 
 * **Task 11.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. Describe the data in a few lines. 
 
-* **Task 12.** Link the FIFA Ranks with this data by means of the country names and generate a scatterplot of the rank against the population, gdp etc. Which of the socio economic variables contains some information about the teams performance?
-
 ```{r, message=FALSE, out.width = '100%'}
 countries <- read.csv("data/countries of the world.csv", dec = ",", strip.white=TRUE) %>%
   arrange(Region)  %>%
   mutate(
     key = gsub("&", "and", trimws(Country)),
   )
+```
+
+* **Task 12.** Link the FIFA Ranks with this data by means of the country names and generate a scatterplot of the rank against the population, gdp etc. Which of the socio economic variables contains some information about the teams performance?
+
+From the FIFA-Ranks data we calculated 3 variables:
+
+* med_rank: the median rank over the whole dataset
+* mean_rank: the mean rank over the whole dataset
+* last_rank: last recorded rank for the country
+
+Using scatterplots, we analysed the correlation of these variables with all numerical variables in the countries dataset. We could not find any significant correlation.
+
+```{r, message=FALSE, out.width = '100%', out.height= '200%'}
 
 #calculate median rank
 # TODO find better metrics of rank
 med_rank_by_country <- read.csv("data/fifa_ranking.csv")  %>%
+  arrange(rank_date)  %>%
   group_by(country_full) %>%
   summarise(
     med_rank = median(rank),
-    mean_rank = mean(rank)
+    mean_rank = mean(rank),
+    last_rank = last(rank)
   ) %>%
   arrange(med_rank)  %>%
   transmute(
     country_full =country_full,
             med_rank = med_rank,
             mean_rank = mean_rank,
+            last_rank = last_rank,
             key =  gsub("&", "and", trimws(as.character(country_full)))
   )
 
-str(med_rank_by_country)
-str(countries)
+head(med_rank_by_country)
+
+```
+
+To merge the `FIFA Ranking` with the `Countries` dataset we grouped the `FIFA Ranking` by country_full. Additionaly we generated a `key` variable for merging with `Countries`.
+
+```{r, message=FALSE, out.width = '100%', out.height= '200%'}
 country_rank <- merge(med_rank_by_country, countries , by="key", all=TRUE)
 
-ggbpairs(country_rank[,sapply(country_rank, is.numeric)])
-
+# only show numeric variables
+numeric_cols <- names(select_if(country_rank, is.numeric))
+#ggpairs(country_rank, columns = c("med_rank", "Population", "Area..sq..mi..",""))
+ggduo(country_rank, c("med_rank", "mean_rank", "last_rank"), numeric_cols[4:(length(numeric_cols)/2)] )
+ggduo(country_rank, c("med_rank", "mean_rank", "last_rank"), numeric_cols[(length(numeric_cols)/2):length(numeric_cols)] )
 ```
 
 ### Evaluation
 
 * **Task 13.** Implement the evaluation metric. This is a function with two arguments: the prediction matrix $R$ and a data structure with the true results $R_{true}$. Note, that this data structure should not be a matrix since two teams may compete twice against each other during the course of a world cup tournament. What data structure would you suggest?
+
+We implemented the evaluation metric as a simple function with the parameters:
+
+* prediction: a symetrical matrix with all participants in the rows/columns. Match outcomes are coded as 'W','D' or 'L'
+* results: dataframe containing real results with columns home.team, away.team and result
+
+The function return the calculated accurancy of the predictions.
 
 ```{r, message=FALSE, out.width = '100%'}
 evaluate.wm <- function(prediction, results) {
@@ -358,24 +405,63 @@ evaluate.wm <- function(prediction, results) {
 
 * **Task 14.** Generate a matrix of random predictions to test this function. Don't forget, that this matrix is symmetric and that the diagonal should only contain NAs. 
 
-TODO!!!!
+For generating the prediction matrix for our evaluation funcion, we construct an empty matrix and fill it with predictions. In this case the predictions are random values.
 
+```{r, message=FALSE, out.width = '100%'}
+
+# all teams participating 2018
+teams.all <- c("Russia", "Portugal", "France", "Argentina", "Saudi Arabia", "Spain", "Australia", "Iceland", "Egypt", "Morocco", "Peru", "Croatia", "Uruguay", "Iran", "Denmark", "Nigeria", "Brazil", "Germany", "Belgium", "Poland", "Switzerland", "Sweden", "Panama", "Senegal", "Costa Rica", "Mexico", "Tunisia", "Colombia", "Serbia", "Korea Republic", "England", "Japan")
+
+#generate prediction matrix
+
+#teams: array of team-names
+#predict_function: name of predict funtion
+#predict_args: additional args to pass to predict_function
+predict.matrix <- function(teams, predict_function, predict_args = NULL) {
+
+  m <- matrix(0, nrow = length(teams), ncol = length(teams), dimnames = list(teams, teams))
+  diag(m) <- NA
+
+  for(j in 1:ncol(m)){
+    for(i in 1:nrow(m)){
+      if (i != j) {
+        args <- list(colnames(m)[i], colnames(m)[j])
+        m[i,j] = do.call(predict_function, c(args,list(predict_args)))
+      }
+    }
+  } 
+  m
+}
+
+#random prediction function
+
+predict.random <- function(home, away, x) {
+  code <- c("W", "D", "L")
+  code[sample(1:3, 1, replace=TRUE)]
+}
+peek(predict.matrix(teams.all, predict.random), 5)
+
+```
 * **Task 15.** Generate (hypothetic) true results and test the function of Task 14.
 
+We use real data from the WC 2018. The data contains the variable $res$ which encodes the results in "1", "2" and "X". We have to translate it in our WDL code.
 ```{r, message=FALSE, out.width = '100%'}
 fifa.results <- read.csv("data/fifa-world-cup-2018-RussianStandardTime-Results.csv", stringsAsFactors=TRUE, strip.white=TRUE, na.strings = "") %>%
   transmute(
     home.team= Home.Team,
     away.team=Away.Team,
-    result = res
+    result = ifelse(res=="1","W",ifelse(res=="2", "L", ifelse(res=="X", "D", NA)))
   )
 
 ```
 
 * **Task 16.** A completely naive predictor, which randomly predicts the outcome with equal probabilites, should serve as a benchmark. What is the expected rate of correct predictions?
 
+There are 3 possibilities for the outcome of a game. If all three are equaly probable, $P(X)=1/3$, so our accurancy sould be around $0.33$.
+
 ```{r, message=FALSE, out.width = '100%'}
-#TODO
+set.seed(33)
+evaluate.wm(predict.matrix(teams.all, predict.random), fifa.results)
 ```
   
 ### Prediction
@@ -397,47 +483,31 @@ For other sources of data the availability might be different. Thus, we need a g
 
 If you want to use information such as scored goals, caps, etc. for every player, then the only possiblity would be the qualifiers. Where can be obtain the results?
 
-
-* **Task 18** You do not have to use a statistical model, but if you do, you have to train it. This would require a trainings dataset. This training set would need include at least
-
-- the result of the game
-- general information about the game
-- information about the home team
-- information about the away team
-
-
-* **Task 19** (voluntary) Create a list of pariticipating nations for every world cup and scrape their information from the follwing links:
-
-[https://www.transfermarkt.de/weltmeisterschaft-2014/teilnehmer/pokalwettbewerb/WM14/saison_id/2013](https://www.transfermarkt.de/weltmeisterschaft-2014/teilnehmer/pokalwettbewerb/WM14/saison_id/2013)
-
-[https://www.transfermarkt.de/weltmeisterschaft-2010/teilnehmer/pokalwettbewerb/WM10/saison_id/2009](https://www.transfermarkt.de/weltmeisterschaft-2010/teilnehmer/pokalwettbewerb/WM10/saison_id/2009)
-
-[https://www.transfermarkt.de/weltmeisterschaft-2006/teilnehmer/pokalwettbewerb/WM06/saison_id/2005](https://www.transfermarkt.de/weltmeisterschaft-2006/teilnehmer/pokalwettbewerb/WM06/saison_id/2005)
-
-[https://www.transfermarkt.de/weltmeisterschaft-2002/teilnehmer/pokalwettbewerb/WM02/saison_id/2001](https://www.transfermarkt.de/weltmeisterschaft-2002/teilnehmer/pokalwettbewerb/WM02/saison_id/2001)
-
-
 ####Possion Model
+
+According to this model the probability of the goals scored by one team is possion distributed. We inspect one team, `Argentina`. First we only count scorres by the team. As comparison we draw the theoritical poisson distribution with $\lambda = mean(goals)$.
 
 ```{r, message=FALSE, out.width = '100%'}
 
 teams.all <- c("Russia", "Portugal", "France", "Argentina", "Saudi Arabia", "Spain", "Australia", "Iceland", "Egypt", "Morocco", "Peru", "Croatia", "Uruguay", "Iran", "Denmark", "Nigeria", "Brazil", "Germany", "Belgium", "Poland", "Switzerland", "Sweden", "Panama", "Senegal", "Costa Rica", "Mexico", "Tunisia", "Colombia", "Serbia", "Korea Republic", "England", "Japan")
 
 
-matches <- matches %>%
-  filter(
+matches <- read.csv("data/WorldCupMatches.csv") %>%
+  dplyr::filter(
       Away.Team.Name %in% teams.all | Home.Team.Name %in% teams.all,
       Year >= 1970
       )
 
 some.team <- matches %>%
-  filter(Home.Team.Name=="Argentina")
+  dplyr::filter(Home.Team.Name=="Argentina")
 
+# histogram of goals scored
 some.home.hist <- some.team %>%
   group_by(Home.Team.Goals) %>%
   summarize(density=n()/nrow(.)) %>%
   mutate(goals = Home.Team.Goals)
   
+#calculate theoretical distribution
 some.home.hist$pois <- dpois(some.home.hist$goals, mean(some.team$Home.Team.Goals))
 
 ggplot(some.home.hist)  +
@@ -447,6 +517,8 @@ ggplot(some.home.hist)  +
 
 
 ```
+
+We make the same for the received goals.
 
 ```{r, message=FALSE, out.width = '100%'}
 some.away.hist <- some.team %>%
@@ -463,54 +535,14 @@ ggplot(some.away.hist)  +
 
 ```
 
+* **Task 18** You do not have to use a statistical model, but if you do, you have to train it. This would require a trainings dataset. This training set would need include at least
 
-```{r, message=FALSE, out.width = '100%'}
-t.offensive <- matches %>%
-  group_by(Home.Team.Goals) %>%
-  summarize(density=n()/nrow(.)) %>%
-  mutate(goals = Home.Team.Goals)
+- the result of the game
+- general information about the game
+- information about the home team
+- information about the away team
 
-t.offensive$pois <- dpois(t.offensive$goals, mean(matches$Home.Team.Goals))
-
-ggplot(t.offensive)  +
-  geom_col(aes(x=goals,y=density, fill=as.factor("real"))) +
-  geom_line(aes(x=goals,y=pois, fill=as.factor("poisson")), color="#f8766d", size=2) +
-  scale_fill_manual(values=c("#f8766d","#04bfc4"), name="Verteilung") +
-  scale_x_continuous(breaks=c(0,2,4,6,8,10))
-```
-
-
-```{r, message=FALSE, out.width = '100%'}
-t.offensive <- matches %>%
-  group_by(Home.Team.Goals) %>%
-  summarize(density=n()/nrow(.)) %>%
-  mutate(goals = Home.Team.Goals)
-
-t.offensive$pois <- dpois(t.offensive$goals, mean(matches$Home.Team.Goals))
-
-p1 <- ggplot(t.offensive)  +
-  geom_col(aes(x=goals,y=density, fill=as.factor("real"))) +
-  geom_line(aes(x=goals,y=pois, fill=as.factor("poisson")), color="#f8766d", size=2) +
-  scale_fill_manual(values=c("#f8766d","#04bfc4"), name="Verteilung") +
-  scale_x_continuous(breaks=c(0,2,4,6,8,10)) +
-  guides(fill=FALSE)
-
-## ALL away goals distribution (deffensive)
-t.defensive <- matches %>%
-  group_by(Away.Team.Goals) %>%
-  summarize(density=n()/nrow(.)) %>%
-  mutate(goals = Away.Team.Goals)
-
-t.defensive$pois <- dpois(t.defensive$goals, mean(matches$Away.Team.Goals))
-
-p2 <- ggplot(t.defensive)  +
-  geom_col(aes(x=goals,y=density, fill=as.factor("real"))) +
-  geom_line(aes(x=goals,y=pois, fill=as.factor("poisson")), color="#f8766d", size=2)  +
-  scale_fill_manual(values=c("#f8766d","#04bfc4"), name="Verteilung") 
-
-
-grid.arrange(p1, p2, ncol=2)
-```
+###Training the Model
 
 ```{r, message=FALSE, out.width = '100%'}
 #training the model
@@ -536,12 +568,14 @@ rest <- expand.grid(team = c("Panama", "Peru", "Iceland"),
 model.poisson <- rbind(matches.a, matches.b, rest) %>%
   glm(data=., goals ~ team + opponent, family="poisson")
 
-summary(model.poisson)
+#head(summary(model.poisson), n = 20)
+#print("...")
+#tail(summary(model.poisson), n = 20)
 ```
 
 
 ```{r, message=FALSE, out.width = '100%'}
-predict.wm <- function(model, home.team, away.team) {
+predict.wm <- function(home.team, away.team, model) {
   #model=model.poisson
   #home.team="Russia"
   #away.team="Italy"
@@ -551,50 +585,22 @@ predict.wm <- function(model, home.team, away.team) {
     m <- dpois(0:10, input[1,]$prediction) %o%  dpois(0:10, input[2,]$prediction)
     
     r <- c(
-      '1' = sum(m[lower.tri(m)]),  
-      X = sum(diag(m)),
-      '2' = sum(m[upper.tri(m)])
+      'W' = sum(m[lower.tri(m)]),  
+      'D' = sum(diag(m)),
+      'L' = sum(m[upper.tri(m)])
     )
     #max(home.prob, draw.prob, away.prob)
     #colname(max(r))
     names(which.max(r))
 }
 
-predict.matrix <- function(teams, model) {
-  #teams <- teams.all
-  #model <- model.poisson
-  m <- matrix(0, nrow = length(teams), ncol = length(teams), dimnames = list(teams, teams))
-  diag(m) <- NA
 
-  for(j in 1:ncol(m)){
-    for(i in 1:nrow(m)){
-      if (i != j) {
-        m[i,j] = predict.wm(model, colnames(m)[i], colnames(m)[j])
-      }
-    }
-  } 
-  m
-}
-
-evaluate.wm <- function(prediction, results) {
-     results <- results %>%
-     mutate(
-       accurate = if (!is.na(result)) {result == prediction[home.team][away.team]} else { NA }
-     )
-   sum(results$accurate, na.rm=TRUE)/sum( !is.na( results$result ) ) 
-}
 ```
 
 
 ```{r, message=FALSE, out.width = '100%'}
-fifa.results <- read.csv("data/fifa-world-cup-2018-RussianStandardTime-Results.csv", stringsAsFactors=TRUE, strip.white=TRUE, na.strings = "") %>%
-  transmute(
-    home.team= Home.Team,
-    away.team=Away.Team,
-    result = res
-  )
 
-prediction <- predict.matrix(teams.all, model.poisson)
+prediction <- predict.matrix(teams.all, predict.wm, model.poisson)
 
 evaluate.wm(prediction, fifa.results)
 ```
@@ -602,6 +608,19 @@ evaluate.wm(prediction, fifa.results)
 ```{r, message=FALSE, out.width = '100%'}
 
 set.seed(2)
+Result_Home_Team = ifelse(WorldCupMatch[,7] > WorldCupMatch[,8], "W", ifelse(WorldCupMatch[,7] == WorldCupMatch[,8], "D", "L"))
+
+
+
+#Get column with Results for the home team into the big Matrix - History of World Cups
+
+Hist_Data = cbind(WorldCupMatch, Result_Home_Team)
+
+colnames(Hist_Data)[21]="Result for Home Team"
+
+HistWDL = Hist_Data %>%
+  select(`Year`, `Home.Team.Name`, `Home.Team.Goals`, `Away.Team.Name`, `Away.Team.Goals`) %>%
+  group_by(`Home.Team.Name`)
 
 TrainingssetHist = HistWDL[sample(nrow(HistWDL), 4200), ]
 TestsetHist = HistWDL[sample(nrow(HistWDL), 100), ]
@@ -609,7 +628,7 @@ TestsetHist = HistWDL[sample(nrow(HistWDL), 100), ]
 TestsetHist = na.omit(TestsetHist)
 TrainingssetHist = na.omit(TrainingssetHist)
 
-Hist_Model = glm(`Home Team Goals` ~ `Home Team Name` + `Away Team Name` + `Away Team Goals`, data = TrainingssetHist)
+Hist_Model = glm(`Home.Team.Goals` ~ `Home.Team.Name` + `Away.Team.Name` + `Away.Team.Goals`, data = TrainingssetHist)
 
 summary(Hist_Model)
 
@@ -619,16 +638,33 @@ TestsetHist$PredictHist = predict(Hist_Model, newdata = TestsetHist, droplevels 
 ## Visualization of Model
 ##### !!!Complete!!!!
 
-ggplot(data = TestsetHist, aes(x = `Home Team Goals`, y = PredictHist))+
+ggplot(data = TestsetHist, aes(x = `Home.Team.Goals`, y = PredictHist))+
   geom_point()+
   geom_abline(color = "blue")
 
 ## Evaluation
 ##### !!!Complete!!!
-fitModel = lm(TestsetHist$`Home Team Goals` ~ TestsetHist$PredictHist)
+fitModel = lm(TestsetHist$`Home.Team.Goals` ~ TestsetHist$PredictHist)
 
 summary(fitModel)
 
 
 ```
+
+* **Task 19** (voluntary) Create a list of pariticipating nations for every world cup and scrape their information from the follwing links:
+
+[https://www.transfermarkt.de/weltmeisterschaft-2014/teilnehmer/pokalwettbewerb/WM14/saison_id/2013](https://www.transfermarkt.de/weltmeisterschaft-2014/teilnehmer/pokalwettbewerb/WM14/saison_id/2013)
+
+[https://www.transfermarkt.de/weltmeisterschaft-2010/teilnehmer/pokalwettbewerb/WM10/saison_id/2009](https://www.transfermarkt.de/weltmeisterschaft-2010/teilnehmer/pokalwettbewerb/WM10/saison_id/2009)
+
+[https://www.transfermarkt.de/weltmeisterschaft-2006/teilnehmer/pokalwettbewerb/WM06/saison_id/2005](https://www.transfermarkt.de/weltmeisterschaft-2006/teilnehmer/pokalwettbewerb/WM06/saison_id/2005)
+
+[https://www.transfermarkt.de/weltmeisterschaft-2002/teilnehmer/pokalwettbewerb/WM02/saison_id/2001](https://www.transfermarkt.de/weltmeisterschaft-2002/teilnehmer/pokalwettbewerb/WM02/saison_id/2001)
+
+
+
   
+###Sources
+
+https://en.wikipedia.org/wiki/Statistical_association_football_predictions
+
