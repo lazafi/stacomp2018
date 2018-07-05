@@ -535,11 +535,11 @@ predict.random &lt;- function(home, away, x) {
 }
 peek(predict.matrix(teams.all, predict.random), 5)</code></pre>
 <pre><code>##              Russia Portugal France Argentina Saudi Arabia
-## Russia       NA     &quot;D&quot;      &quot;D&quot;    &quot;L&quot;       &quot;D&quot;         
-## Portugal     &quot;W&quot;    NA       &quot;D&quot;    &quot;W&quot;       &quot;D&quot;         
-## France       &quot;D&quot;    &quot;W&quot;      NA     &quot;D&quot;       &quot;D&quot;         
-## Argentina    &quot;L&quot;    &quot;L&quot;      &quot;L&quot;    NA        &quot;D&quot;         
-## Saudi Arabia &quot;L&quot;    &quot;L&quot;      &quot;D&quot;    &quot;L&quot;       NA</code></pre>
+## Russia       NA     &quot;W&quot;      &quot;D&quot;    &quot;W&quot;       &quot;D&quot;         
+## Portugal     &quot;L&quot;    NA       &quot;W&quot;    &quot;L&quot;       &quot;W&quot;         
+## France       &quot;W&quot;    &quot;D&quot;      NA     &quot;L&quot;       &quot;D&quot;         
+## Argentina    &quot;W&quot;    &quot;W&quot;      &quot;D&quot;    NA        &quot;W&quot;         
+## Saudi Arabia &quot;W&quot;    &quot;L&quot;      &quot;D&quot;    &quot;L&quot;       NA</code></pre>
 <ul>
 <li><strong>Task 15.</strong> Generate (hypothetic) true results and test the function of Task 14.</li>
 </ul>
@@ -582,6 +582,7 @@ evaluate.wm(predict.matrix(teams.all, predict.random), fifa.results)</code></pre
 <li>only WordCupMatches from 1990 onwards</li>
 <li>only matches decided in regular time</li>
 <li>only if at least one of the teams qualified to play in the 2018 World Cup</li>
+<li>only use the last known FIFA rank for a country</li>
 </ul>
 <pre class="r"><code>matches &lt;- read.csv(&quot;data/WorldCupMatches.csv&quot;)  %&gt;%
    filter(
@@ -641,7 +642,7 @@ ggplot(some.away.hist)  +
 <li>goals scored by the home team</li>
 </ul>
 <p>the goals scored becomes our prediction variable.</p>
-<p>Additionally we had to include <code>Panama</code>, <code>Peru</code> and <code>Iceland</code> in the training set.</p>
+<p>Additionally we had to include <code>Panama</code>, <code>Peru</code> and <code>Iceland</code> in the training set. Since they have not played in the WoldCup since at least 1990, we assumed they scored 0 goals.</p>
 <pre class="r"><code>#training the model
 
 matches.a &lt;- matches %&gt;%

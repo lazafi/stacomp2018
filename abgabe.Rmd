@@ -490,6 +490,7 @@ We decided to train our models on the `WorldCupMatches` and the `FIFA Ranking` d
 * only WordCupMatches from 1990 onwards
 * only matches decided in regular time
 * only if at least one of the teams qualified to play in the 2018 World Cup
+* only use the last known FIFA rank for a country
 
 ```{r, message=FALSE, out.width = '100%'}
 matches <- read.csv("data/WorldCupMatches.csv")  %>%
@@ -563,7 +564,7 @@ Our basic Poisson model uses only minimal information:
 
 the goals scored becomes our prediction variable.
 
-Additionally we had to include `Panama`, `Peru` and `Iceland` in the training set.
+Additionally we had to include `Panama`, `Peru` and `Iceland` in the training set. Since they have not played in the WoldCup since at least 1990, we assumed they scored 0 goals.
 
 ```{r, message=FALSE, out.width = '100%'}
 #training the model
