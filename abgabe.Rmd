@@ -1,7 +1,7 @@
 ---
 title: "StatComp 2018 WC"
 subtitle: "Abgabe"
-author: "Attila Lázár (Matr. Nr. 0026842) TODO:Mathias"
+author: "Mathias Binder (Matr.Nr. 01268283), Attila Lázár (Matr.Nr. 0026842)"
 output: html_document
 ---
 
@@ -64,7 +64,7 @@ WorldCupMatch = read.csv("data/WorldCupMatches.csv")
 
 * **Task 2.** Write a function that generates the result of the game (W, D, L) from the vectors. How would you incorporate the information in the variable `Win.conditions`?
 
-$Win.conditions$ contains information if the game was decided with extratime or penalties. As we do predictions we will decide whether we use this games for training or we use only regullarly decided games.
+`Win.conditions` contains information if the game was decided with extratime or penalties. As we do predictions we will decide whether we use this games for training or we use only regullarly decided games.
 
 ```{r, message=FALSE}
 result_code <- function(data, code) {
@@ -172,7 +172,7 @@ Since this dataset contains result from countries over a long period of time one
 * **Task 5.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. 
 * **Task 6.** What is the class of `fifa.ranking$rank_date`? Is this a problem? Can you change it to class `date` using `as.Date`? What difference does this make for e.g. plotting?
 
-We use $mutate$ from $dplyr$ package to convert `rank_date`. This conversion is meaningfull because, as we can see later in the plots, the plotting library can format the dates appropriately. Also if we could analyse the data as timeseries.
+We use `mutate` from `dplyr` package to convert `rank_date`. This conversion is meaningfull because, as we can see later in the plots, the plotting library can format the dates appropriately. Also we could analyse the data as a timeseries if we choose to.
 
 ```{r, message=FALSE}
 ranking <- read.csv("data/fifa_ranking.csv")  %>%
@@ -231,11 +231,10 @@ ggplot(ranking_de, aes(x = rank_date, y = value)) +
        subtitle="Ranking metrics",
        caption="Source: FIFA",
        y="value of metric",
-       x="Date") +
-  theme_minimal()
+       x="Date") 
 ```
 
-As an simple metrik we calculated the median fifa-rank for every country. We plotted the first 20.
+As a simple metric we calculated the median, mean and last fifa-rank for every country. We arranged the data by `last_rank` and plotted the first 20.
 
 ```{r, message=FALSE, out.width = '100%'}
 med_rank_by_country <- ranking %>%
@@ -245,7 +244,6 @@ group_by(country_abrv) %>%
     med_rank = median(rank),
     last_rank = last(rank)
 ) %>%
-  arrange(med_rank)  %>%
   transmute(country_abrv = as.character(country_abrv),
            med_rank = med_rank,
            last_rank = last_rank)
@@ -327,6 +325,8 @@ hint: use `read_html()`, `html_nodes()` with the css selectors ".item" or "td", 
 
 * **Task 11.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. Describe the data in a few lines. 
 
+In order to be able to merge this dataset by coutryname, we introduce a new variable `key`.
+
 ```{r, message=FALSE, out.width = '100%'}
 countries <- read.csv("data/countries of the world.csv", dec = ",", strip.white=TRUE) %>%
   arrange(Region)  %>%
@@ -370,7 +370,7 @@ head(med_rank_by_country)
 
 ```
 
-To merge the `FIFA Ranking` with the `Countries` dataset we grouped the `FIFA Ranking` by country_full. Additionaly we generated a `key` variable for merging with `Countries`.
+To merge the `FIFA Ranking` with the `Countries` dataset we grouped the `FIFA Ranking` by country_full. Additionaly we generated a `key` variable for merging with `Countries` using the same string-transformations as in the `Countries` dataset.
 
 ```{r, message=FALSE, out.width = '100%', out.height= '200%'}
 country_rank <- merge(med_rank_by_country, countries , by="key", all=TRUE)
@@ -542,7 +542,17 @@ ggplot(some.away.hist)  +
 - information about the home team
 - information about the away team
 
-###Training the Model
+######Training the Model
+
+Our basic Poisson model uses only minimal information:
+
+* Name of the home-team
+* Name of the opponent
+* goals scored by the home team
+
+the goals scored becomes our prediction variable.
+
+Additionaly we had to include `Panama`, `Peru` and `Iceland` in the training set.
 
 ```{r, message=FALSE, out.width = '100%'}
 #training the model
@@ -550,16 +560,17 @@ ggplot(some.away.hist)  +
 matches.a <- matches %>%
   transmute(
     team = Home.Team.Name,
-    goals = Home.Team.Goals,
     opponent = Away.Team.Name,
+    goals = Home.Team.Goals,
   )
 matches.b <- matches %>%
   transmute(
     team = Away.Team.Name,
-    goals = Away.Team.Goals,
     opponent = Home.Team.Name,
+    goals = Away.Team.Goals,
   )
 
+# include this coutries
 rest <- expand.grid(team = c("Panama", "Peru", "Iceland"),
                     opponent = c("Panama", "Peru", "Iceland"),
                     goals = 0
@@ -573,6 +584,7 @@ model.poisson <- rbind(matches.a, matches.b, rest) %>%
 #tail(summary(model.poisson), n = 20)
 ```
 
+We use the model the predict the goals scorred by the home team. Then we use the same model to predict the goals received with the team and opponent flipped.
 
 ```{r, message=FALSE, out.width = '100%'}
 predict.wm <- function(home.team, away.team, model) {
@@ -582,6 +594,7 @@ predict.wm <- function(home.team, away.team, model) {
     input <- data.frame(team=c(home.team, away.team),opponent=c(away.team, home.team))
     input$prediction <- predict(model, newdata=input, type="response")
     
+    # calculate probability matrix
     m <- dpois(0:10, input[1,]$prediction) %o%  dpois(0:10, input[2,]$prediction)
     
     r <- c(
@@ -589,11 +602,8 @@ predict.wm <- function(home.team, away.team, model) {
       'D' = sum(diag(m)),
       'L' = sum(m[upper.tri(m)])
     )
-    #max(home.prob, draw.prob, away.prob)
-    #colname(max(r))
     names(which.max(r))
 }
-
 
 ```
 
@@ -601,9 +611,104 @@ predict.wm <- function(home.team, away.team, model) {
 ```{r, message=FALSE, out.width = '100%'}
 
 prediction <- predict.matrix(teams.all, predict.wm, model.poisson)
-
+peek(prediction, 5)
 evaluate.wm(prediction, fifa.results)
 ```
+
+As a second experiment we trained a new model with information about the team ranks.
+
+* team_rank: the last FIFA rank of the home team
+* opponent_rank: the last FIFA rank of the away team
+
+
+```{r, message=FALSE, out.width = '100%'}
+
+ranks <- med_rank_by_country$last_rank
+names(ranks) <- med_rank_by_country$country_full
+
+matches.a.r <- matches.a %>%
+  mutate(
+    opponent_rank = ranks[opponent],
+    team_rank = ranks[team]
+  )
+
+matches.b.r <- matches.b %>%
+  mutate(
+    opponent_rank = ranks[opponent],
+    team_rank = ranks[team]
+  )
+
+rest.r <- rest %>%
+  mutate(
+    opponent_rank = 1000,
+    team_rank = 1000
+  )
+
+
+
+model.poisson.rank <- rbind(matches.a.r, matches.b.r, rest.r) %>%
+  glm(data=., goals ~ team + opponent + team_rank + opponent_rank, family="poisson")
+
+```
+
+We calculate a prediction matrix again. As you can see at the bottom of the prediction matrix, our accurancy dropped. Although our model entails more information about the teams, the accurancy is near the baseline.
+
+```{r, message=FALSE, echo=FALSE}
+predict.wm.rank <- function(home.team, away.team, model) {
+  #model=model.poisson
+  #home.team="Russia"
+  #away.team="Italy"
+  hrank <- ifelse (is.na(ranks[home.team]), 0, ranks[home.team])
+  names(hrank) <- NULL
+  orank <- ifelse (is.na(ranks[away.team]), 0, ranks[away.team])
+  names(orank) <- NULL
+  
+  input <- data.frame(team=c(home.team, away.team),opponent=c(away.team, home.team), team_rank=c(hrank, orank), opponent_rank=c(orank, hrank))
+  input$prediction <- predict(model, newdata=input, type="response")
+  
+  m <- dpois(0:10, input[1,]$prediction) %o%  dpois(0:10, input[2,]$prediction)
+  
+  r <- c(
+    'W' = sum(m[lower.tri(m)]),  
+    'D' = sum(diag(m)),
+    'L' = sum(m[upper.tri(m)])
+  )
+  #max(home.prob, draw.prob, away.prob)
+  #colname(max(r))
+  names(which.max(r))
+}
+
+predict.matrix <- function(teams, predict_function, predict_args = NULL) {
+  #teams <- teams.all
+  #predict_function <- predict.wm.rank
+  #predict_args <- model.poisson
+  
+  m <- matrix(0, nrow = length(teams), ncol = length(teams), dimnames = list(teams, teams))
+  diag(m) <- NA
+  
+  for(j in 1:ncol(m)){
+    for(i in 1:nrow(m)){
+      if (i != j) {
+        hometeam <- colnames(m)[i]
+        oppteam <- colnames(m)[j]
+        args <- list(hometeam, oppteam)
+        m[i,j] = do.call(predict_function, c(args,list(predict_args)))
+      }
+    }
+  } 
+  m
+}
+
+
+prediction.r <- predict.matrix(teams.all, predict.wm.rank, predict_args=model.poisson.rank)
+peek(prediction.r, 5)
+evaluate.wm(prediction.r, fifa.results)
+
+```
+
+#### Alternative Model
+
+As an alternative aproach we train or model to predict the goals scored.
 
 ```{r, message=FALSE, out.width = '100%'}
 
@@ -630,20 +735,17 @@ TrainingssetHist = na.omit(TrainingssetHist)
 
 Hist_Model = glm(`Home.Team.Goals` ~ `Home.Team.Name` + `Away.Team.Name` + `Away.Team.Goals`, data = TrainingssetHist)
 
-summary(Hist_Model)
+head(summary(Hist_Model))
 
 TestsetHist$PredictHist = predict(Hist_Model, newdata = TestsetHist, droplevels = TRUE)
 
 
 ## Visualization of Model
-##### !!!Complete!!!!
-
 ggplot(data = TestsetHist, aes(x = `Home.Team.Goals`, y = PredictHist))+
   geom_point()+
   geom_abline(color = "blue")
 
-## Evaluation
-##### !!!Complete!!!
+
 fitModel = lm(TestsetHist$`Home.Team.Goals` ~ TestsetHist$PredictHist)
 
 summary(fitModel)
