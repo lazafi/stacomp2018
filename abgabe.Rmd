@@ -7,7 +7,7 @@ output: html_document
 
 ## Tools Used 
 
-We used R for our experiments and visualisations. First we load the libraries we will use. Some funtions are masked by other libraries, we explicilty name them to avoid collisions.
+We used R for our experiments and visualizations. First we load the libraries we will use. Some functions are masked by other libraries, we explicitly name them to avoid collisions.
 
 ```{r setup, include=TRUE, echo=FALSE}
 knitr::opts_chunk$set(
@@ -43,7 +43,7 @@ filter <- dplyr::filter
 * **Task 1.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. Describe the data in a few lines.
 
 * WorldCupPayers 
-* WorldCupMatches Historic WC Data contains relevant information regarding soccer games from World Cups beginning at 1930 and ending at 2014. The entries after 2014 are probobly used for 2018 but are currently empty - they display NA
+* WorldCupMatches Historic WC Data contains relevant information regarding soccer games from World Cups beginning at 1930 and ending at 2014. The entries after 2014 are probably used for 2018 but are currently empty - they display NA
 
 ```{r, message=FALSE}
 WorldCup = read.csv("data/WorldCups.csv")
@@ -64,7 +64,7 @@ WorldCupMatch = read.csv("data/WorldCupMatches.csv")
 
 * **Task 2.** Write a function that generates the result of the game (W, D, L) from the vectors. How would you incorporate the information in the variable `Win.conditions`?
 
-`Win.conditions` contains information if the game was decided with extratime or penalties. As we do predictions we will decide whether we use this games for training or we use only regullarly decided games.
+`Win.conditions` contains information if the game was decided with extra time or penalties. As we do predictions we will decide whether we use this games for training or we use only regularly decided games.
 
 ```{r, message=FALSE}
 result_code <- function(data, code) {
@@ -172,7 +172,7 @@ Since this dataset contains result from countries over a long period of time one
 * **Task 5.** Get familiar with the data using `str()`, `head()`, `table()`, `summary()`, etc. 
 * **Task 6.** What is the class of `fifa.ranking$rank_date`? Is this a problem? Can you change it to class `date` using `as.Date`? What difference does this make for e.g. plotting?
 
-We use `mutate` from `dplyr` package to convert `rank_date`. This conversion is meaningfull because, as we can see later in the plots, the plotting library can format the dates appropriately. Also we could analyse the data as a timeseries if we choose to.
+We use `mutate` from `dplyr` package to convert `rank_date`. This conversion is necessary because, as we can see later in the plots, the plotting library can format the dates appropriately. Also we could analyse the data as a timeseries if we choose to.
 
 ```{r, message=FALSE}
 ranking <- read.csv("data/fifa_ranking.csv")  %>%
@@ -370,7 +370,7 @@ head(med_rank_by_country)
 
 ```
 
-To merge the `FIFA Ranking` with the `Countries` dataset we grouped the `FIFA Ranking` by country_full. Additionaly we generated a `key` variable for merging with `Countries` using the same string-transformations as in the `Countries` dataset.
+To merge the `FIFA Ranking` with the `Countries` dataset we grouped the `FIFA Ranking` by country_full. Additionally we generated a `key` variable for merging with `Countries` using the same string-transformations as in the `Countries` dataset.
 
 ```{r, message=FALSE, out.width = '100%', out.height= '200%'}
 country_rank <- merge(med_rank_by_country, countries , by="key", all=TRUE)
@@ -388,10 +388,10 @@ ggduo(country_rank, c("med_rank", "mean_rank", "last_rank"), numeric_cols[(lengt
 
 We implemented the evaluation metric as a simple function with the parameters:
 
-* prediction: a symetrical matrix with all participants in the rows/columns. Match outcomes are coded as 'W','D' or 'L'
+* prediction: a symmetrical matrix with all participants in the rows/columns. Match outcomes are coded as 'W','D' or 'L'
 * results: dataframe containing real results with columns home.team, away.team and result
 
-The function return the calculated accurancy of the predictions.
+The function returns the calculated accuracy of the predictions.
 
 ```{r, message=FALSE, out.width = '100%'}
 evaluate.wm <- function(prediction, results) {
@@ -405,7 +405,7 @@ evaluate.wm <- function(prediction, results) {
 
 * **Task 14.** Generate a matrix of random predictions to test this function. Don't forget, that this matrix is symmetric and that the diagonal should only contain NAs. 
 
-For generating the prediction matrix for our evaluation funcion, we construct an empty matrix and fill it with predictions. In this case the predictions are random values.
+For generating the prediction matrix for our evaluation function, we construct an empty matrix and fill it with predictions. In this case the predictions are random values.
 
 ```{r, message=FALSE, out.width = '100%'}
 
@@ -455,9 +455,9 @@ fifa.results <- read.csv("data/fifa-world-cup-2018-RussianStandardTime-Results.c
 
 ```
 
-* **Task 16.** A completely naive predictor, which randomly predicts the outcome with equal probabilites, should serve as a benchmark. What is the expected rate of correct predictions?
+* **Task 16.** A completely naive predictor, which randomly predicts the outcome with equal probabilities, should serve as a benchmark. What is the expected rate of correct predictions?
 
-There are 3 possibilities for the outcome of a game. If all three are equaly probable, $P(X)=1/3$, so our accurancy sould be around $0.33$.
+There are 3 possibilities for the outcome of a game. If all three are equally probable, $P(X)=1/3$, so our accuracy should be around $0.33$.
 
 ```{r, message=FALSE, out.width = '100%'}
 set.seed(33)
@@ -483,20 +483,31 @@ For other sources of data the availability might be different. Thus, we need a g
 
 If you want to use information such as scored goals, caps, etc. for every player, then the only possiblity would be the qualifiers. Where can be obtain the results?
 
+####Training Data
+
+We decided to train our models on the `WorldCupMatches` and the `FIFA Ranking` datasets.
+
+* only WordCupMatches from 1990 onwards
+* only matches decided in regular time
+* only if at least one of the teams qualified to play in the 2018 World Cup
+
+```{r, message=FALSE, out.width = '100%'}
+matches <- read.csv("data/WorldCupMatches.csv")  %>%
+   filter(
+       Away.Team.Name %in% teams.all | Home.Team.Name %in% teams.all,
+       Year >= 1990,
+       Win.conditions != ""
+   )
+
+```
+
 ####Possion Model
 
-According to this model the probability of the goals scored by one team is possion distributed. We inspect one team, `Argentina`. First we only count scorres by the team. As comparison we draw the theoritical poisson distribution with $\lambda = mean(goals)$.
+According to this model the probability of the goals scored by one team is possion distributed. We inspect one team, `Argentina`. First we only count scores by the team. As comparison we draw the theoretical poisson distribution with $\lambda = mean(goals)$.
 
 ```{r, message=FALSE, out.width = '100%'}
 
 teams.all <- c("Russia", "Portugal", "France", "Argentina", "Saudi Arabia", "Spain", "Australia", "Iceland", "Egypt", "Morocco", "Peru", "Croatia", "Uruguay", "Iran", "Denmark", "Nigeria", "Brazil", "Germany", "Belgium", "Poland", "Switzerland", "Sweden", "Panama", "Senegal", "Costa Rica", "Mexico", "Tunisia", "Colombia", "Serbia", "Korea Republic", "England", "Japan")
-
-
-matches <- read.csv("data/WorldCupMatches.csv") %>%
-  dplyr::filter(
-      Away.Team.Name %in% teams.all | Home.Team.Name %in% teams.all,
-      Year >= 1970
-      )
 
 some.team <- matches %>%
   dplyr::filter(Home.Team.Name=="Argentina")
@@ -552,7 +563,7 @@ Our basic Poisson model uses only minimal information:
 
 the goals scored becomes our prediction variable.
 
-Additionaly we had to include `Panama`, `Peru` and `Iceland` in the training set.
+Additionally we had to include `Panama`, `Peru` and `Iceland` in the training set.
 
 ```{r, message=FALSE, out.width = '100%'}
 #training the model
@@ -584,7 +595,7 @@ model.poisson <- rbind(matches.a, matches.b, rest) %>%
 #tail(summary(model.poisson), n = 20)
 ```
 
-We use the model the predict the goals scorred by the home team. Then we use the same model to predict the goals received with the team and opponent flipped.
+We use the model the predict the goals scored by the home team. Then we use the same model to predict the goals received with the team and opponent flipped.
 
 ```{r, message=FALSE, out.width = '100%'}
 predict.wm <- function(home.team, away.team, model) {
@@ -651,7 +662,7 @@ model.poisson.rank <- rbind(matches.a.r, matches.b.r, rest.r) %>%
 
 ```
 
-We calculate a prediction matrix again. As you can see at the bottom of the prediction matrix, our accurancy dropped. Although our model entails more information about the teams, the accurancy is near the baseline.
+We calculate a prediction matrix again. As you can see at the bottom of the prediction matrix, our accuracy dropped. Although our model entails more information about the teams, the accuracy is near the baseline.
 
 ```{r, message=FALSE, echo=FALSE}
 predict.wm.rank <- function(home.team, away.team, model) {
@@ -708,7 +719,7 @@ evaluate.wm(prediction.r, fifa.results)
 
 #### Alternative Model
 
-As an alternative aproach we train or model to predict the goals scored.
+As an alternative approach we train or model to predict the goals scored.
 
 ```{r, message=FALSE, out.width = '100%'}
 

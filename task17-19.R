@@ -19,7 +19,9 @@ teams.fav <- c("Russia", "Portugal", "France", "Argentina")
 matches <- matches %>%
   filter(
       Away.Team.Name %in% teams.all | Home.Team.Name %in% teams.all,
-      Year >= 1970
+      Year >= 1990,
+      Win.conditions != ""
+      
       )
 
 some.team <- matches %>%
@@ -169,40 +171,5 @@ evaluate.wm(prediction, fifa.results)
 
 predict.wm(model.poisson, "Russia", "Italy")
 
-  # ggplot() +
-  #   geom_line(aes(x=0:10,y=dpois(0:10, result[1,]$prediction), color=as.factor("home")), size=2) +
-  #   geom_line(aes(x=0:10,y=dpois(0:10, result[2,]$prediction), color=as.factor("away")), size=2) +
-  #   geom_vline(xintercept=result[1,]$prediction, color="#04bfc4") +
-  #   geom_vline(xintercept=result[2,]$prediction, color="#f8766d") +
-  #   scale_x_continuous(breaks=c(0,2,4,6,8,10))
-  # 
-  # dpois(0:4, result[1,]$prediction)
-  # dpois(0:4, result[2,]$prediction)
-  # 
-  #   ppois(result[1,]$prediction, result[1,]$prediction) -  ppois(result[1,]$prediction, result[1,]$prediction, lower=FALSE)
-  
-  #geom_vline(xintercept=testdata[2,]$prediction) 
-#rpoisline(1)
-#skellam::dskellam(0,mean(ger.home$home.goals),mean(ger.home$away.goals))
-#predProbs<-predict(poislm,data.frame(y=seq(min(y), max(y), length.out=100)), type="response")
-#lines(seq(min(y), max(y), length.out=100), predProbs, col=2, lwd=2)
 
 
-
-# i <- 1
-# for (x in testdata) {
-#   print(x)
-#   print(prediction[i])
-#   i <- i+1
-# }
-
-# X <-  rbind(
-#   c( 1, -1,  0,  0),
-#   c( 0,  0,  1, -1),
-#   c( 0, -1,  0,  1),
-#   c( 1,  0,  0, -1),
-#   c( 0,  1,  -1, 0)
-# )
-# y = c(2,1,-3,2,2)
-# 
-# ginv(X) %*% y
